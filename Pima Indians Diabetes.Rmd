@@ -64,7 +64,13 @@ This is the **post cleaning verification**, unlike the previous summary we can s
 
 # Step 2 : Feature Transformation and Engineering
 
-First, we
+First, we create 2 new variables :
+
+-   BMICategory in function of the BMI, which is based on the standard World Health Organisation(WHO) thresholds, into 4 categories( Underweight, Normal, Overweight, Obesity)
+
+-   BPCategory in function of the Blood Pressure, according to the World Health Organisation thresholds, into 5 categories( Normal, Elevated, Hypertension Level 1 and 2 and Hypertension crisis)
+
+Then we transform the Outcome variable into text to make it more understandable. If the value is 1, then we write "Diabetic", otherwise we write "Not Diabetic".
 
 ```{r}
 # Mutating each column needed to be categorized
@@ -90,8 +96,11 @@ diabetes <- diabetes %>% mutate(
 diabetes
 ```
 
-```{r}
-diabetes_scaled <- diabetes %>% mutate(across(where(is.numeric), scale)) # standardize all numeric columns (mean=0, sd=1) and convert results from matrix to vector
+Then we want to standardize our numerical values, so we subtract by the mean and divide by the standard deviation to have a mean of 0 and a standard deviation of 1. This will be better to train the models later.
+
+```{r echo=FALSE}
+# Standardizing all numeric columns (mean=0, sd=1)
+diabetes_scaled <- diabetes %>% mutate(across(where(is.numeric), scale))
 diabetes_scaled
 ```
 
@@ -123,9 +132,57 @@ For the two graphs:
 
 The **red curve** represent non-diabetic's patient. Their curve is centered around lower glucose values. In the other hand, the **blue curve** are diabetic's patient is shifted to the right, indicating higher glucose levels. The blue curve extends further right, suggesting greater variability in glucose levels among diabetics.
 
-For the second graph, as we cleaned data (where glucose's value was 0) the x scale is shifted to the right. We can see that the overlap is reduced, making it easier to distinguish between the two groups.
+For the second graph, as we cleaned data (where glucose's value was 0) the x scale is shifted to the right. We can see that the overlap is reduced, making it easier to distinguish between the two groups. (That's why its really important to clean our data before analyse them, in order to make a better investigation)
 
 These curves show that the glucose variable is a good indicator for distinguishing diabetic patients from non-diabetic patients. It could be a key variable in a predictive model.
+
+```{r}
+p3 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = BMI, fill = as.factor(Outcome))) +
+  geom_boxplot() +
+  labs(title = "BMI by Outcome", x = "Outcome", y = "BMI") +
+  theme_minimal()
+
+p4 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = Age, fill = as.factor(Outcome))) +
+  geom_boxplot() +
+  labs(title = "Âge by Outcome", x = "Outcome", y = "Âge") +
+  theme_minimal()
+
+grid.arrange(p3, p4, ncol = 2)
+```
+
+For the BMI graph, diabetic patients often have a higher BMI (overweight/obese), which is a known risk factor for diabetes. That's why the box plots show a higher median for diabetics.
+
+And for the age graph, type 2 diabetes is more common in older people, so the age distribution shows a higher concentration of diabetics in the older age groups.
+
+```{r}
+#install.packages("ggcorrplot") 
+library(ggcorrplot)
+
+numerical_data <- diabetes %>% select(where(is.numeric))
+cor_matrix <- cor(numerical_data, use = "complete.obs")
+
+biserial_cor <- sapply(numerical_data, function(x) cor(x, diabetes$Outcome, method = "pearson"))
+
+cor_matrix_with_outcome <- rbind(cor_matrix, biserial_cor)
+rownames(cor_matrix_with_outcome)[nrow(cor_matrix_with_outcome)] <- "Outcome"
+colnames(cor_matrix_with_outcome)[ncol(cor_matrix_with_outcome)] <- "Outcome"
+
+
+ggcorrplot(
+  cor_matrix_with_outcome,
+  hc.order = TRUE,
+  type = "upper",
+  lab = TRUE,
+  lab_size = 3,
+  method = "circle",
+  colors = c("tomato2", "white", "springgreen3"),
+  title = "Correlation Matrix (Including Outcome)",
+  show.legend = TRUE,
+  legend.title = "Correlation"
+)
+```
+
+We can see that age and pregnancy are fairly correlated, which makes sense. Generally, people are pregnant between the ages of 20 and 45, rarely younger and rarely older.
 
 # Step 4 : Modeling and Predicting (Data Science)
 
@@ -154,20 +211,27 @@ We are going to use 4 different algorithms, logistic Regression Model, K-nearest
 library(class)
 ```
 
-```{r}
-trainFeatures <- trainData[,-length(trainData)]
-testFeattures <- testData[,-length(testData)]
-trainLabels <- trainData$Outcome
+First we prepare our data, separating the input from the outputs
 
+```{r include=FALSE}
+#we take out the non-numerical and the Outcome out of our input data
+trainFeatures <- trainData[, 1:(ncol(trainData)-3)]
+testFeatures  <- testData[, 1:(ncol(testData)-3)]
+
+#we prepare our training output
+trainLabels   <- trainData$Outcome
+```
+
+then we apply our model
+
+```{r echo=FALSE}
 #applying the KNN algorithm
 knn_predictions <- knn(train = trainFeatures, test = testFeattures, cl = trainLabels, k=5)
 
 table(knn_predictions, testData$Outcome)
 ```
 
-# \### Cross Validation
+the line on the table are the is the reality and the columns if the predicted. Our model predicted 121 right out of 154, it also predicted 11 false positive and 22 false negative
 
-```{r}
+### Cross Validation
 
-diabetes_scaled
-```
