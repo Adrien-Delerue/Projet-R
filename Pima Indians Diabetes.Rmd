@@ -20,12 +20,10 @@ After cleaning invalid values, features are standardized and categorized, visual
 library(dplyr)
 ```
 
-
 ```{r echo=FALSE}
 #Loading the dataset
 diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
 head(diabetes)
-summary(diabetes)
 ```
 
 # Step 1 : Data Cleaning and Preparation
@@ -40,8 +38,7 @@ First we are going to replace all the impossible values, such as :
 
 -   the BMI at 0
 
--   and the Diabetes Pedigree Function at 0
-We obtain the following summary :
+-   and the Diabetes Pedigree Function at 0 We obtain the following summary :
 
 ```{r echo=FALSE}
 #mutating each columns concern, if a value equals 0, it's replaced by an NA value
@@ -55,9 +52,8 @@ diabetes <- diabetes %>%
   )
 summary(diabetes)
 ```
-Now we are going to replace those NA values by the median of each columns.
-We obtain the following summary :
 
+Now we are going to replace those NA values by the median of each columns. We obtain the following summary :
 
 ```{r echo=FALSE}
 #mutating each columns concern, if a value equals NA, it's replaced by the median of the corresponding columns else it stays the same
@@ -72,8 +68,12 @@ diabetes <- diabetes %>%
 
 summary(diabetes)
 ```
+
 Unlike the previous summary we can see in this one that we don't have any NA Values left
 
+# Step 2 : Feature Transformation and Engineering
+
+First, we 
 ```{r}
 diabetes_var<-colnames(diabetes)
 diabetes_var_without_outcome<-diabetes_var[diabetes_var!="Outcome"]
@@ -81,3 +81,44 @@ diabetes_scaled <-diabetes %>% mutate_at(diabetes_var_without_outcome, ~(scale(.
 diabetes_scaled
 ```
 
+# Step 3 : Visualization and Exploration
+
+
+
+# Step 4 : Modeling and Predicting (Data Science)
+
+First we are going to divide our cleaned data set in 2 groups, the training dataset (80% of our data) and the testing dataset (20% of our data)
+```{r include=FALSE}
+# Randomly shuffling the data
+set.seed(123)
+
+#determining the size of the sampling
+sampleIndex <- sample(1:nrow(diabetes_scaled), 0.8 * nrow(diabetes_scaled))
+
+#splitting our cleaned and scaled data
+trainData <- diabetes_scaled[sampleIndex, ]
+testData <- diabetes_scaled[-sampleIndex, ]
+```
+We are going to use 4 different algorithms, logistic Regression Model, K-nearest Model and Cross-Validation, then we'll analyze the impact of cleaning
+
+### Logistic Regression Model
+
+### K-Nearest Model
+```{r include=FALSE}
+#downloading the libraries
+library(class)
+```
+
+```{r}
+trainFeatures <- trainData[,-length(trainData)]
+testFeattures <- testData[,-length(testData)]
+trainLabels <- trainData$Outcome
+
+#applying the KNN algorithm
+knn_predictions <- knn(train = trainFeatures, test = testFeattures, cl = trainLabels, k=5)
+
+table(knn_predictions, testData$Outcome)
+```
+
+
+### Cross Validation
