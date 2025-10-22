@@ -146,6 +146,25 @@ For the second graph, as we cleaned data (where glucose's value was 0) the x sca
 
 These curves show that the glucose variable is a good indicator for distinguishing diabetic patients from non-diabetic patients. It could be a key variable in a predictive model.
 
+```{r}
+p3 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = BMI, fill = as.factor(Outcome))) +
+  geom_boxplot() +
+  labs(title = "BMI by Outcome", x = "Outcome", y = "BMI") +
+  theme_minimal()
+
+p4 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = Age, fill = as.factor(Outcome))) +
+  geom_boxplot() +
+  labs(title = "Âge by Outcome", x = "Outcome", y = "Âge") +
+  theme_minimal()
+
+# Afficher les graphiques côte à côte
+grid.arrange(p3, p4, ncol = 2)
+```
+
+For the BMI graph, diabetic patients often have a higher BMI (overweight/obese), which is a known risk factor for diabetes. That's why the box plots show a higher median for diabetics.
+
+And for the age graph, type 2 diabetes is more common in older people, so the age distribution shows a higher concentration of diabetics in the older age groups.
+
 # Step 4 : Modeling and Predicting (Data Science)
 
 First we are going to divide our cleaned data set in 2 groups, the training dataset (80% of our data) and the testing dataset (20% of our data)
@@ -167,26 +186,30 @@ We are going to use 4 different algorithms, logistic Regression Model, K-nearest
 ### Logistic Regression Model
 
 ### K-Nearest Model
-
 ```{r include=FALSE}
 #downloading the libraries
 library(class)
 ```
+First we prepare our data, separating the input from the outputs
+```{r include=FALSE}
+#we take out the non-numerical and the Outcome out of our input data
+trainFeatures <- trainData[, 1:(ncol(trainData)-3)]
+testFeatures  <- testData[, 1:(ncol(testData)-3)]
 
-```{r}
-trainFeatures <- trainData[,-length(trainData)]
-testFeattures <- testData[,-length(testData)]
-trainLabels <- trainData$Outcome
+#we prepare our training output
+trainLabels   <- trainData$Outcome
+```
 
+then we apply our model
+```{r echo=FALSE}
 #applying the KNN algorithm
-knn_predictions <- knn(train = trainFeatures, test = testFeattures, cl = trainLabels, k=5)
+knn_predictions <- knn(train = trainFeatures, test = testFeatures, cl = trainLabels, k=5)
 
+#showing
 table(knn_predictions, testData$Outcome)
 ```
+the line on the table are the is the reality and the columns if the predicted.
+Our model predicted 121 right out of 154, it also predicted 11 false positive and 22 false negative
 
-# \### Cross Validation
+### Cross Validation
 
-```{r}
-
-diabetes_scaled
-```
