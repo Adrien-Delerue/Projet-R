@@ -1,17 +1,30 @@
 ---
-title: "Diabetes"
-output: html_document
+title: "PROJECT 4"
+output: 
+  html_document:
+    toc: true     
+    toc_float: true
+    df_print: paged
+    css: "Pima_Indians_Diabetes.css"
 date: "2025-10-22"
 ---
 
+# Pima Diabetes -Detecting Diabetes from Imperfect Medical Data
+
+The project aims to predict diabetes in Pima Indian women using imperfect medical data.\
+
+After cleaning invalid values, features are standardized and categorized, visualizations are created to explore patterns, and models (Logistic Regression and KNN) are trained and compared to show the impact of data cleaning.
+
 ```{r include=FALSE}
-install.packages("dplyr")
+#install.packages("dplyr")
 library(dplyr)
 ```
+
 
 ```{r echo=FALSE}
 #Loading the dataset
 diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
+head(diabetes)
 summary(diabetes)
 ```
 
@@ -30,7 +43,7 @@ First we are going to replace all the impossible values, such as :
 -   and the Diabetes Pedigree Function at 0
 We obtain the following summary :
 
-```{r echp=FALSE}
+```{r echo=FALSE}
 #mutating each columns concern, if a value equals 0, it's replaced by an NA value
 diabetes <- diabetes %>%
   mutate(
@@ -45,12 +58,9 @@ summary(diabetes)
 Now we are going to replace those NA values by the median of each columns.
 We obtain the following summary :
 
-<<<<<<< HEAD
+
 ```{r echo=FALSE}
 #mutating each columns concern, if a value equals NA, it's replaced by the median of the corresponding columns else it stays the same
-=======
-```{r}
->>>>>>> a5820b9a41e14688a5455e2bd83477a1fc6f7871
 diabetes <- diabetes %>%
   mutate(
     Glucose = if_else(is.na(Glucose), median(Glucose, na.rm = TRUE), Glucose),
@@ -62,9 +72,7 @@ diabetes <- diabetes %>%
 
 summary(diabetes)
 ```
-<<<<<<< HEAD
 Unlike the previous summary we can see in this one that we don't have any NA Values left
-=======
 
 ```{r}
 diabetes_var<-colnames(diabetes)
@@ -72,4 +80,4 @@ diabetes_var_without_outcome<-diabetes_var[diabetes_var!="Outcome"]
 diabetes_scaled <-diabetes %>% mutate_at(diabetes_var_without_outcome, ~(scale(.) %>% as.vector))
 diabetes_scaled
 ```
->>>>>>> a5820b9a41e14688a5455e2bd83477a1fc6f7871
+
