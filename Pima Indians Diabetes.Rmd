@@ -26,9 +26,4 @@ diabetes <- diabetes %>%
 summary(diabetes)
 ```
 
-```{r}
-diabetes_var<-colnames(diabetes)
-diabetes_var_without_outcome<-diabetes_var[diabetes_var!="Outcome"]
-diabetes_scaled <-diabetes %>% mutate_at(diabetes_var_without_outcome, ~(scale(.) %>% as.vector))
-diabetes_scaled
-```
+
