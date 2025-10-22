@@ -158,26 +158,30 @@ We are going to use 4 different algorithms, logistic Regression Model, K-nearest
 ### Logistic Regression Model
 
 ### K-Nearest Model
-
 ```{r include=FALSE}
 #downloading the libraries
 library(class)
 ```
+First we prepare our data, separating the input from the outputs
+```{r include=FALSE}
+#we take out the non-numerical and the Outcome out of our input data
+trainFeatures <- trainData[, 1:(ncol(trainData)-3)]
+testFeatures  <- testData[, 1:(ncol(testData)-3)]
 
-```{r}
-trainFeatures <- trainData[,-length(trainData)]
-testFeattures <- testData[,-length(testData)]
-trainLabels <- trainData$Outcome
+#we prepare our training output
+trainLabels   <- trainData$Outcome
+```
 
+then we apply our model
+```{r echo=FALSE}
 #applying the KNN algorithm
-knn_predictions <- knn(train = trainFeatures, test = testFeattures, cl = trainLabels, k=5)
+knn_predictions <- knn(train = trainFeatures, test = testFeatures, cl = trainLabels, k=5)
 
+#showing
 table(knn_predictions, testData$Outcome)
 ```
+the line on the table are the is the reality and the columns if the predicted.
+Our model predicted 121 right out of 154, it also predicted 11 false positive and 22 false negative
 
-# \### Cross Validation
+### Cross Validation
 
-```{r}
-
-diabetes_scaled
-```
