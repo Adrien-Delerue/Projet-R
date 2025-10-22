@@ -11,5 +11,17 @@ library(dplyr)
 
 ```{r}
 diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
-head(diabetes)
+summary(diabetes)
+```
+
+```{r}
+diabetes <- diabetes %>%
+  mutate(
+    Glucose = na_if(Glucose, 0),
+    BloodPressure = na_if(BloodPressure, 0),
+    SkinThickness = na_if(SkinThickness, 0),
+    BMI = na_if(BMI, 0),
+    DiabetesPedigreeFunction = na_if(DiabetesPedigreeFunction, 0),
+  )
+summary(diabetes)
 ```
