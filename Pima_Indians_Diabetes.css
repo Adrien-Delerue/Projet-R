@@ -1,0 +1,79 @@
+
+body {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background-color: #f7fcf7;
+  color: #1b4332;
+  line-height: 1.6;
+  margin: 40px;
+}
+
+h1, h2, h3 {
+  color: #2d6a4f;
+  font-weight: 600;
+  border-bottom: 2px solid #95d5b2;
+  padding-bottom: 4px;
+  margin-top: 1.5em;
+}
+
+a {
+  color: #40916c;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 20px 0;
+  font-size: 0.95em;
+}
+th {
+  background-color: #95d5b2;
+  color: #fff;
+  text-align: left;
+  padding: 8px;
+}
+td {
+  border-bottom: 1px solid #d8f3dc;
+  padding: 8px;
+}
+tr:nth-child(even) {
+  background-color: #e9f5ec;
+}
+
+pre, code {
+  background-color: #e8f5e9;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-family: "Fira Code", monospace;
+  color: #1b4332;
+}
+
+blockquote {
+  border-left: 4px solid #74c69d;
+  background: #e9f5ec;
+  padding: 10px 20px;
+  font-style: italic;
+  color: #2d6a4f;
+}
+
+img {
+  border: 2px solid #95d5b2;
+  border-radius: 8px;
+  padding: 5px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.title {
+  color: #1b4332;
+  text-align: center;
+  font-size: 2em;
+}
+.author, .date {
+  text-align: center;
+  color: #40916c;
+  font-style: italic;
+}

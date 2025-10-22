@@ -1,16 +1,29 @@
 ---
-title: "Diabetes"
-output: html_document
+title: "PROJECT 4"
+output: 
+  html_document:
+    toc: true     
+    toc_float: true
+    css: "Pima_Indians_Diabetes.css"
 date: "2025-10-22"
 ---
 
+# Pima Diabetes -Detecting Diabetes from Imperfect Medical Data
+
+The project aims to predict diabetes in Pima Indian women using imperfect medical data.\
+
+After cleaning invalid values, features are standardized and categorized, visualizations are created to explore patterns, and models (Logistic Regression and KNN) are trained and compared to show the impact of data cleaning.
+
 ```{r include=FALSE}
-install.packages("dplyr")
+#install.packages("dplyr")
 library(dplyr)
 ```
 
+## Data Cleaning
+
 ```{r}
 diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
+head(diabetes)
 summary(diabetes)
 ```
 
