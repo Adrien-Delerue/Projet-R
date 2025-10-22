@@ -26,4 +26,22 @@ diabetes <- diabetes %>%
 summary(diabetes)
 ```
 
+```{r}
+diabetes <- diabetes %>%
+  mutate(
+    Glucose = if_else(is.na(Glucose), median(Glucose, na.rm = TRUE), Glucose),
+    BloodPressure = if_else(is.na(BloodPressure), median(BloodPressure, na.rm = TRUE), BloodPressure),
+    SkinThickness = if_else(is.na(SkinThickness), median(SkinThickness, na.rm = TRUE), SkinThickness),
+    BMI = if_else(is.na(BMI), median(BMI, na.rm = TRUE), BMI),
+    DiabetesPedigreeFunction = if_else(is.na(DiabetesPedigreeFunction), median(DiabetesPedigreeFunction, na.rm = TRUE), DiabetesPedigreeFunction)
+  )
 
+summary(diabetes)
+```
+
+```{r}
+diabetes_var<-colnames(diabetes)
+diabetes_var_without_outcome<-diabetes_var[diabetes_var!="Outcome"]
+diabetes_scaled <-diabetes %>% mutate_at(diabetes_var_without_outcome, ~(scale(.) %>% as.vector))
+diabetes_scaled
+```
