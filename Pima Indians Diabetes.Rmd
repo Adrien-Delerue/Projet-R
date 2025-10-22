@@ -20,11 +20,9 @@ After cleaning invalid values, features are standardized and categorized, visual
 library(dplyr)
 ```
 
-
 ```{r echo=FALSE}
 #Loading the dataset
 diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
-head(diabetes)
 summary(diabetes)
 ```
 
@@ -40,8 +38,7 @@ First we are going to replace all the impossible values, such as :
 
 -   the BMI at 0
 
--   and the Diabetes Pedigree Function at 0
-We obtain the following summary :
+-   and the Diabetes Pedigree Function at 0 We obtain the following summary :
 
 ```{r echo=FALSE}
 #mutating each columns concern, if a value equals 0, it's replaced by an NA value
@@ -55,9 +52,8 @@ diabetes <- diabetes %>%
   )
 summary(diabetes)
 ```
-Now we are going to replace those NA values by the median of each columns.
-We obtain the following summary :
 
+Now we are going to replace those NA values by the median of each columns. We obtain the following summary :
 
 ```{r echo=FALSE}
 #mutating each columns concern, if a value equals NA, it's replaced by the median of the corresponding columns else it stays the same
@@ -72,7 +68,8 @@ diabetes <- diabetes %>%
 
 summary(diabetes)
 ```
-Unlike the previous summary we can see in this one that we don't have any NA Values left
+
+This is the **post cleaning verification**, unlike the previous summary we can see in this one that we don't have any NA Values left. Our data set is now cleared.
 
 ```{r}
 diabetes_var<-colnames(diabetes)
@@ -80,4 +77,3 @@ diabetes_var_without_outcome<-diabetes_var[diabetes_var!="Outcome"]
 diabetes_scaled <-diabetes %>% mutate_at(diabetes_var_without_outcome, ~(scale(.) %>% as.vector))
 diabetes_scaled
 ```
-
