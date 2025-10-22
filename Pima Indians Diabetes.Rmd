@@ -5,7 +5,7 @@ date: "2025-10-22"
 ---
 
 ```{r include=FALSE}
-#install.packages("dplyr")
+install.packages("dplyr")
 library(dplyr)
 ```
 
@@ -45,8 +45,12 @@ summary(diabetes)
 Now we are going to replace those NA values by the median of each columns.
 We obtain the following summary :
 
+<<<<<<< HEAD
 ```{r echo=FALSE}
 #mutating each columns concern, if a value equals NA, it's replaced by the median of the corresponding columns else it stays the same
+=======
+```{r}
+>>>>>>> a5820b9a41e14688a5455e2bd83477a1fc6f7871
 diabetes <- diabetes %>%
   mutate(
     Glucose = if_else(is.na(Glucose), median(Glucose, na.rm = TRUE), Glucose),
@@ -58,4 +62,14 @@ diabetes <- diabetes %>%
 
 summary(diabetes)
 ```
+<<<<<<< HEAD
 Unlike the previous summary we can see in this one that we don't have any NA Values left
+=======
+
+```{r}
+diabetes_var<-colnames(diabetes)
+diabetes_var_without_outcome<-diabetes_var[diabetes_var!="Outcome"]
+diabetes_scaled <-diabetes %>% mutate_at(diabetes_var_without_outcome, ~(scale(.) %>% as.vector))
+diabetes_scaled
+```
+>>>>>>> a5820b9a41e14688a5455e2bd83477a1fc6f7871
