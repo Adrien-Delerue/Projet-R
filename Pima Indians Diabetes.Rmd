@@ -5,7 +5,7 @@ date: "2025-10-22"
 ---
 
 ```{r include=FALSE}
-install.packages("dplyr")
+#install.packages("dplyr")
 library(dplyr)
 ```
 
@@ -25,3 +25,18 @@ diabetes <- diabetes %>%
   )
 summary(diabetes)
 ```
+
+
+```{r}
+diabetes <- diabetes %>%
+  mutate(
+    Glucose = if_else(is.na(Glucose), median(Glucose, na.rm = TRUE), Glucose),
+    BloodPressure = if_else(is.na(BloodPressure), median(BloodPressure, na.rm = TRUE), BloodPressure),
+    SkinThickness = if_else(is.na(SkinThickness), median(SkinThickness, na.rm = TRUE), SkinThickness),
+    BMI = if_else(is.na(BMI), median(BMI, na.rm = TRUE), BMI),
+    DiabetesPedigreeFunction = if_else(is.na(DiabetesPedigreeFunction), median(DiabetesPedigreeFunction, na.rm = TRUE), DiabetesPedigreeFunction)
+  )
+
+summary(diabetes)
+```
+
