@@ -129,7 +129,13 @@ library(gridExtra)
 grid.arrange(p1, p2, ncol = 2)
 ```
 
-The **red curve** represent non-diabetic's patient. Their curve is centered around lower glucose values. In the other han, the **blue curve** are diabetic's patient is shifted to the right, indicating higher glucose levels. The blue curve extends further right, suggesting greater variability in glucose levels among diabetics.
+For the two graphs:
+
+The **red curve** represent non-diabetic's patient. Their curve is centered around lower glucose values. In the other hand, the **blue curve** are diabetic's patient is shifted to the right, indicating higher glucose levels. The blue curve extends further right, suggesting greater variability in glucose levels among diabetics.
+
+For the second graph, as we cleaned data (where glucose's value was 0) the x scale is shifted to the right. We can see that the overlap is reduced, making it easier to distinguish between the two groups.
+
+These curves show that the glucose variable is a good indicator for distinguishing diabetic patients from non-diabetic patients. It could be a key variable in a predictive model.
 
 # Step 4 : Modeling and Predicting (Data Science)
 
