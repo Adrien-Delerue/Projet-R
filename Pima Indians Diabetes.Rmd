@@ -72,8 +72,34 @@ summary(diabetes)
 This is the **post cleaning verification**, unlike the previous summary we can see in this one that we don't have any NA Values left. Our data set is now cleared.
 
 ```{r}
-diabetes_var<-colnames(diabetes)
+
+diabetes <- diabetes %>% mutate(
+  BMICategory = case_when(
+    BMI < 18.5 ~ "Underweight",
+    BMI < 24.9 ~ "Normal",
+    BMI < 29.9 ~ "Overweight",
+    .default = "Obesity"
+  ),
+  BPCategory = case_when(
+     BloodPressure < 80 ~ "Normal",
+     .default = "Elevated"
+  ),
+  Outcome = case_when(
+    Outcome == 1 ~ "Diabetic",
+    .default = "Not Diabetic"
+  )
+)
+diabetes
+```
+
+```{r}
+diabetes_var<-colnames(diabetes %>% select(where(is.numeric)))
 diabetes_var_without_outcome<-diabetes_var[diabetes_var!="Outcome"]
 diabetes_scaled <-diabetes %>% mutate_at(diabetes_var_without_outcome, ~(scale(.) %>% as.vector))
+diabetes_scaled
+```
+
+```{r}
+
 diabetes_scaled
 ```
