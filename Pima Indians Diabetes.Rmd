@@ -137,6 +137,25 @@ For the second graph, as we cleaned data (where glucose's value was 0) the x sca
 
 These curves show that the glucose variable is a good indicator for distinguishing diabetic patients from non-diabetic patients. It could be a key variable in a predictive model.
 
+```{r}
+p3 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = BMI, fill = as.factor(Outcome))) +
+  geom_boxplot() +
+  labs(title = "BMI by Outcome", x = "Outcome", y = "BMI") +
+  theme_minimal()
+
+p4 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = Age, fill = as.factor(Outcome))) +
+  geom_boxplot() +
+  labs(title = "Âge by Outcome", x = "Outcome", y = "Âge") +
+  theme_minimal()
+
+# Afficher les graphiques côte à côte
+grid.arrange(p3, p4, ncol = 2)
+```
+
+For the BMI graph, diabetic patients often have a higher BMI (overweight/obese), which is a known risk factor for diabetes. That's why the box plots show a higher median for diabetics.
+
+And for the age graph, type 2 diabetes is more common in older people, so the age distribution shows a higher concentration of diabetics in the older age groups.
+
 # Step 4 : Modeling and Predicting (Data Science)
 
 First we are going to divide our cleaned data set in 2 groups, the training dataset (80% of our data) and the testing dataset (20% of our data)
