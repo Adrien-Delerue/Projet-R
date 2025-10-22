@@ -77,3 +77,29 @@ diabetes_var_without_outcome<-diabetes_var[diabetes_var!="Outcome"]
 diabetes_scaled <-diabetes %>% mutate_at(diabetes_var_without_outcome, ~(scale(.) %>% as.vector))
 diabetes_scaled
 ```
+
+# Step 3: Visualization and Exploration (with ggplot2)
+
+```{r}
+not_cleaned_diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
+```
+
+`not_cleaned_diabete` is our data set before the first step, so not cleaned at all. with missing values and incoherences.
+
+```{r}
+library(ggplot2)
+p1 <- ggplot(not_cleaned_diabetes, aes(x = Glucose, fill = as.factor(Outcome))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Glucose (not cleaned)", x = "Glucose", y = "Density") +
+  theme_minimal()
+
+p2 <- ggplot(diabetes, aes(x = Glucose, fill = as.factor(Outcome))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Glucose (cleaned)", x = "Glucose", y = "Density") +
+  theme_minimal()
+
+library(gridExtra)
+grid.arrange(p1, p2, ncol = 2)
+```
+
+The **red curve** represent non-diabetic's patient. Their curve is centered around lower glucose values. In the other han, the **blue curve** are diabetic's patient is shifted to the right, indicating higher glucose levels. The blue curve extends further right, suggesting greater variability in glucose levels among diabetics.
