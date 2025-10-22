@@ -9,12 +9,29 @@ date: "2025-10-22"
 library(dplyr)
 ```
 
-```{r}
+```{r echo=FALSE}
+#Loading the dataset
 diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
 summary(diabetes)
 ```
 
-```{r}
+# Step 1 : Data Cleaning and Preparation
+
+First we are going to replace all the impossible values, such as :
+
+-   the Glucose level at 0
+
+-   the Blood Pressure at 0
+
+-   the Skin Thickness at 0
+
+-   the BMI at 0
+
+-   and the Diabetes Pedigree Function at 0
+We obtain the following summary :
+
+```{r echp=FALSE}
+#mutating each columns concern, if a value equals 0, it's replaced by an NA value
 diabetes <- diabetes %>%
   mutate(
     Glucose = na_if(Glucose, 0),
@@ -25,9 +42,11 @@ diabetes <- diabetes %>%
   )
 summary(diabetes)
 ```
+Now we are going to replace those NA values by the median of each columns.
+We obtain the following summary :
 
-
-```{r}
+```{r echo=FALSE}
+#mutating each columns concern, if a value equals NA, it's replaced by the median of the corresponding columns else it stays the same
 diabetes <- diabetes %>%
   mutate(
     Glucose = if_else(is.na(Glucose), median(Glucose, na.rm = TRUE), Glucose),
@@ -39,4 +58,4 @@ diabetes <- diabetes %>%
 
 summary(diabetes)
 ```
-
+Unlike the previous summary we can see in this one that we don't have any NA Values left
