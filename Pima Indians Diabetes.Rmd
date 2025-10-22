@@ -134,7 +134,7 @@ For the two graphs:
 
 The **red curve** represent non-diabetic's patient. Their curve is centered around lower glucose values. In the other hand, the **blue curve** are diabetic's patient is shifted to the right, indicating higher glucose levels. The blue curve extends further right, suggesting greater variability in glucose levels among diabetics.
 
-For the second graph, as we cleaned data (where glucose's value was 0) the x scale is shifted to the right. We can see that the overlap is reduced, making it easier to distinguish between the two groups.
+For the second graph, as we cleaned data (where glucose's value was 0) the x scale is shifted to the right. We can see that the overlap is reduced, making it easier to distinguish between the two groups. (That's why its really important to clean our data before analyse them, in order to make a better investigation)
 
 These curves show that the glucose variable is a good indicator for distinguishing diabetic patients from non-diabetic patients. It could be a key variable in a predictive model.
 
@@ -149,13 +149,42 @@ p4 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = Age, fill = as.factor(Out
   labs(title = "Âge by Outcome", x = "Outcome", y = "Âge") +
   theme_minimal()
 
-# Afficher les graphiques côte à côte
 grid.arrange(p3, p4, ncol = 2)
 ```
 
 For the BMI graph, diabetic patients often have a higher BMI (overweight/obese), which is a known risk factor for diabetes. That's why the box plots show a higher median for diabetics.
 
 And for the age graph, type 2 diabetes is more common in older people, so the age distribution shows a higher concentration of diabetics in the older age groups.
+
+```{r}
+#install.packages("ggcorrplot") 
+library(ggcorrplot)
+
+numerical_data <- diabetes %>% select(where(is.numeric))
+cor_matrix <- cor(numerical_data, use = "complete.obs")
+
+biserial_cor <- sapply(numerical_data, function(x) cor(x, diabetes$Outcome, method = "pearson"))
+
+cor_matrix_with_outcome <- rbind(cor_matrix, biserial_cor)
+rownames(cor_matrix_with_outcome)[nrow(cor_matrix_with_outcome)] <- "Outcome"
+colnames(cor_matrix_with_outcome)[ncol(cor_matrix_with_outcome)] <- "Outcome"
+
+
+ggcorrplot(
+  cor_matrix_with_outcome,
+  hc.order = TRUE,
+  type = "upper",
+  lab = TRUE,
+  lab_size = 3,
+  method = "circle",
+  colors = c("tomato2", "white", "springgreen3"),
+  title = "Correlation Matrix (Including Outcome)",
+  show.legend = TRUE,
+  legend.title = "Correlation"
+)
+```
+
+We can see that age and pregnancy are fairly correlated, which makes sense. Generally, people are pregnant between the ages of 20 and 45, rarely younger and rarely older.
 
 # Step 4 : Modeling and Predicting (Data Science)
 
