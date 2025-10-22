@@ -75,9 +75,15 @@ This is the **post cleaning verification**, unlike the previous summary we can s
 
 # Step 2 : Feature Transformation and Engineering
 
-First, we
+First, we create 2 new variables :
 
-```{r}
+-BMICategory in function of the BMI, which is based on the standard World Health Organisation(WHO) thresholds, into 4 categories( Underweight, Normal, Overweight, Obesity)
+
+-BPCategory in function of the Blood Pressure, according to the World Health Organisation thresholds, into 5 categories( Normal, Elevated, Hypertension Level 1 and 2 and Hypertension crisis)
+
+Then we transform the Outcome variable into text to make it more understandable. If the value is 1, then we write "Diabetic", otherwise we write "Not Diabetic".
+
+```{r echo=FALSE}
 
 diabetes <- diabetes %>% mutate(
   BMICategory = case_when(
@@ -101,7 +107,9 @@ diabetes <- diabetes %>% mutate(
 diabetes
 ```
 
-```{r}
+Then we want to standardize our numerical values, so we subtract by the mean and divide by the standard deviation to have a mean of 0 and a standard deviation of 1. This will be better to train the models later.
+
+```{r echo=FALSE}
 diabetes_scaled <-diabetes %>% mutate_at(colnames(diabetes %>% select(where(is.numeric))), ~(scale(.) %>% as.vector))
 diabetes_scaled
 ```
