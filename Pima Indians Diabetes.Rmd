@@ -11,12 +11,11 @@ date: "2025-10-22"
 
 # Pima Diabetes -Detecting Diabetes from Imperfect Medical Data
 
-The project aims to predict diabetes in Pima Indian women using imperfect medical data.\
+The project aims to predict diabetes in Pima Indian women using imperfect medical data.
 
 After cleaning invalid values, features are standardized and categorized, visualizations are created to explore patterns, and models (Logistic Regression and KNN) are trained and compared to show the impact of data cleaning.
 
 ```{r include=FALSE}
-#install.packages("dplyr")
 library(dplyr)
 ```
 
@@ -44,14 +43,12 @@ We obtain the following summary :
 
 ```{r echo=FALSE}
 # Mutating each columns concern, if a value equals 0, it's replaced by an NA value
-diabetes <- diabetes %>%
-  mutate(
-    Glucose = na_if(Glucose, 0),
-    BloodPressure = na_if(BloodPressure, 0),
-    SkinThickness = na_if(SkinThickness, 0),
-    BMI = na_if(BMI, 0),
-    DiabetesPedigreeFunction = na_if(DiabetesPedigreeFunction, 0),
-  )
+selected_col <- c("Glucose", "BloodPressure", "SkinThickness", "BMI", "DiabetesPedigreeFunction")
+diabetes <- diabetes %>% mutate(across(all_of(selected_col), ~ na_if(., 0))) # Replace all 0 values with NA in the selected columns
+# Across : apply the function for each col
+# ~ na_if(., 0) : replace 0 by NA for each col selected
+# . : current col
+# all_of : column names taken from a variable.
 summary(diabetes)
 ```
 
@@ -59,15 +56,7 @@ Now we are going to replace those NA values by the median of each columns. We ob
 
 ```{r echo=FALSE}
 # Mutating each columns concern, if a value equals NA, it's replaced by the median of the corresponding columns else it stays the same
-diabetes <- diabetes %>%
-  mutate(
-    Glucose = if_else(is.na(Glucose), median(Glucose, na.rm = TRUE), Glucose),
-    BloodPressure = if_else(is.na(BloodPressure), median(BloodPressure, na.rm = TRUE), BloodPressure),
-    SkinThickness = if_else(is.na(SkinThickness), median(SkinThickness, na.rm = TRUE), SkinThickness),
-    BMI = if_else(is.na(BMI), median(BMI, na.rm = TRUE), BMI),
-    DiabetesPedigreeFunction = if_else(is.na(DiabetesPedigreeFunction), median(DiabetesPedigreeFunction, na.rm = TRUE), DiabetesPedigreeFunction)
-  )
-
+diabetes <- diabetes %>% mutate(across(all_of(selected_col), ~ if_else(is.na(.), median(., na.rm = TRUE), .)))
 summary(diabetes)
 ```
 
@@ -75,14 +64,20 @@ This is the **post cleaning verification**, unlike the previous summary we can s
 
 # Step 2 : Feature Transformation and Engineering
 
-First, we
+First, we create 2 new variables :
+
+-   BMICategory in function of the BMI, which is based on the standard World Health Organisation(WHO) thresholds, into 4 categories( Underweight, Normal, Overweight, Obesity)
+
+-   BPCategory in function of the Blood Pressure, according to the World Health Organisation thresholds, into 5 categories( Normal, Elevated, Hypertension Level 1 and 2 and Hypertension crisis)
+
+Then we transform the Outcome variable into text to make it more understandable. If the value is 1, then we write "Diabetic", otherwise we write "Not Diabetic".
 
 ```{r}
-
+# Mutating each column needed to be categorized
 diabetes <- diabetes %>% mutate(
   BMICategory = case_when(
     BMI < 18.5 ~ "Underweight",
-    BMI < 24.9 ~ "Normal",
+    BMI < 24.9 ~ "Normal", # Equals to BMI >= 18.5 and BMI < 24.9 because the first case has been complete
     BMI < 29.9 ~ "Overweight",
     .default = "Obesity"
   ),
@@ -101,8 +96,11 @@ diabetes <- diabetes %>% mutate(
 diabetes
 ```
 
-```{r}
-diabetes_scaled <-diabetes %>% mutate_at(colnames(diabetes %>% select(where(is.numeric))), ~(scale(.) %>% as.vector))
+Then we want to standardize our numerical values, so we subtract by the mean and divide by the standard deviation to have a mean of 0 and a standard deviation of 1. This will be better to train the models later.
+
+```{r echo=FALSE}
+# Standardizing all numeric columns (mean=0, sd=1)
+diabetes_scaled <- diabetes %>% mutate(across(where(is.numeric), scale))
 diabetes_scaled
 ```
 
@@ -134,7 +132,7 @@ For the two graphs:
 
 The **red curve** represent non-diabetic's patient. Their curve is centered around lower glucose values. In the other hand, the **blue curve** are diabetic's patient is shifted to the right, indicating higher glucose levels. The blue curve extends further right, suggesting greater variability in glucose levels among diabetics.
 
-For the second graph, as we cleaned data (where glucose's value was 0) the x scale is shifted to the right. We can see that the overlap is reduced, making it easier to distinguish between the two groups.
+For the second graph, as we cleaned data (where glucose's value was 0) the x scale is shifted to the right. We can see that the overlap is reduced, making it easier to distinguish between the two groups. (That's why its really important to clean our data before analyse them, in order to make a better investigation)
 
 These curves show that the glucose variable is a good indicator for distinguishing diabetic patients from non-diabetic patients. It could be a key variable in a predictive model.
 
@@ -149,13 +147,42 @@ p4 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = Age, fill = as.factor(Out
   labs(title = "Âge by Outcome", x = "Outcome", y = "Âge") +
   theme_minimal()
 
-# Afficher les graphiques côte à côte
 grid.arrange(p3, p4, ncol = 2)
 ```
 
 For the BMI graph, diabetic patients often have a higher BMI (overweight/obese), which is a known risk factor for diabetes. That's why the box plots show a higher median for diabetics.
 
 And for the age graph, type 2 diabetes is more common in older people, so the age distribution shows a higher concentration of diabetics in the older age groups.
+
+```{r}
+install.packages("ggcorrplot") 
+library(ggcorrplot)
+
+numerical_data <- diabetes %>% select(where(is.numeric))
+cor_matrix <- cor(numerical_data, use = "complete.obs")
+
+biserial_cor <- sapply(numerical_data, function(x) cor(x, diabetes$Outcome, method = "pearson"))
+
+cor_matrix_with_outcome <- rbind(cor_matrix, biserial_cor)
+rownames(cor_matrix_with_outcome)[nrow(cor_matrix_with_outcome)] <- "Outcome"
+colnames(cor_matrix_with_outcome)[ncol(cor_matrix_with_outcome)] <- "Outcome"
+
+
+ggcorrplot(
+  cor_matrix_with_outcome,
+  hc.order = TRUE,
+  type = "upper",
+  lab = TRUE,
+  lab_size = 3,
+  method = "circle",
+  colors = c("tomato2", "white", "springgreen3"),
+  title = "Correlation Matrix (Including Outcome)",
+  show.legend = TRUE,
+  legend.title = "Correlation"
+)
+```
+
+We can see that age and pregnancy are fairly correlated, which makes sense. Generally, people are pregnant between the ages of 20 and 45, rarely younger and rarely older.
 
 # Step 4 : Modeling and Predicting (Data Science)
 
@@ -184,6 +211,9 @@ testFeatures  <- testData[, 1:(ncol(testData)-3)]
 #we prepare our training output
 trainLabels   <- trainData$Outcome
 ```
+
+
+
 ### Logistic Regression Model
 ```{r echo=FALSE}
 #adapting the data to the model
@@ -210,17 +240,17 @@ Our model predicted 119 right out of 154, it also predicted 12 false positive an
 #downloading the libraries
 library(class)
 ```
+
 We are going to apply our model K Nearst Neighbours with 5 neighbours
 ```{r echo=FALSE}
 #applying the KNN algorithm
 knn_predictions <- knn(train = trainFeatures, test = testFeatures, cl = trainLabels, k=5)
 
-#showing
 table(knn_predictions, testData$Outcome)
 
 ```
-the line on the table are the is the reality and the columns if the predicted.
-Our model predicted 121 right out of 154, it also predicted 11 false positive and 22 false negative
+
+the line on the table are the is the reality and the columns if the predicted. Our model predicted 121 right out of 154, it also predicted 11 false positive and 22 false negative
 
 ### Cross Validation
 
