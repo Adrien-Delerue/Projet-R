@@ -175,14 +175,7 @@ testData <- diabetes_scaled[-sampleIndex, ]
 
 We are going to use 4 different algorithms, logistic Regression Model, K-nearest Model and Cross-Validation, then we'll analyze the impact of cleaning
 
-### Logistic Regression Model
-
-### K-Nearest Model
-```{r include=FALSE}
-#downloading the libraries
-library(class)
-```
-First we prepare our data, separating the input from the outputs
+But before we apply any of our model we are going to prepare our data, separating the input from the outputs
 ```{r include=FALSE}
 #we take out the non-numerical and the Outcome out of our input data
 trainFeatures <- trainData[, 1:(ncol(trainData)-3)]
@@ -191,17 +184,45 @@ testFeatures  <- testData[, 1:(ncol(testData)-3)]
 #we prepare our training output
 trainLabels   <- trainData$Outcome
 ```
+### Logistic Regression Model
+```{r echo=FALSE}
+#adapting the data to the model
+trainDF <- trainData  %>% select(-BMICategory, -BPCategory)
+trainDF$Outcome <- ifelse(trainDF$Outcome == "Diabetic", 1, 0)
+```
 
-then we apply our model
+
+```{r echo=FALSE}
+# training the model
+logistic_model <- glm(Outcome ~ ., data = trainDF, family = binomial)
+
+# Prediction on our test data
+logistic_prediction <- ifelse(predict(logistic_model, newdata = testFeatures, type ="response") > 0.5,  1, 0)
+
+table(logistic_prediction, testData$Outcome)
+```
+the line on the table are the is the reality and the columns if the predicted.
+Our model predicted 119 right out of 154, it also predicted 12 false positive and 23 false negative
+
+
+### K-Nearest Model
+```{r include=FALSE}
+#downloading the libraries
+library(class)
+```
+We are going to apply our model K Nearst Neighbours with 5 neighbours
 ```{r echo=FALSE}
 #applying the KNN algorithm
 knn_predictions <- knn(train = trainFeatures, test = testFeatures, cl = trainLabels, k=5)
 
 #showing
 table(knn_predictions, testData$Outcome)
+
 ```
 the line on the table are the is the reality and the columns if the predicted.
 Our model predicted 121 right out of 154, it also predicted 11 false positive and 22 false negative
 
 ### Cross Validation
 
+
+### Analyzing the Impact of Cleaning
