@@ -155,7 +155,7 @@ For the BMI graph, diabetic patients often have a higher BMI (overweight/obese),
 And for the age graph, type 2 diabetes is more common in older people, so the age distribution shows a higher concentration of diabetics in the older age groups.
 
 ```{r}
-install.packages("ggcorrplot") 
+#install.packages("ggcorrplot") 
 library(ggcorrplot)
 
 numerical_data <- diabetes %>% select(where(is.numeric))
@@ -203,6 +203,7 @@ testData <- diabetes_scaled[-sampleIndex, ]
 We are going to use 4 different algorithms, logistic Regression Model, K-nearest Model and Cross-Validation, then we'll analyze the impact of cleaning
 
 But before we apply any of our model we are going to prepare our data, separating the input from the outputs
+
 ```{r include=FALSE}
 #we take out the non-numerical and the Outcome out of our input data
 trainFeatures <- trainData[, 1:(ncol(trainData)-3)]
@@ -212,15 +213,13 @@ testFeatures  <- testData[, 1:(ncol(testData)-3)]
 trainLabels   <- trainData$Outcome
 ```
 
-
-
 ### Logistic Regression Model
+
 ```{r echo=FALSE}
 #adapting the data to the model
 trainDF <- trainData  %>% select(-BMICategory, -BPCategory)
 trainDF$Outcome <- ifelse(trainDF$Outcome == "Diabetic", 1, 0)
 ```
-
 
 ```{r echo=FALSE}
 # training the model
@@ -231,17 +230,18 @@ logistic_prediction <- ifelse(predict(logistic_model, newdata = testFeatures, ty
 
 table(logistic_prediction, testData$Outcome)
 ```
-the line on the table are the is the reality and the columns if the predicted.
-Our model predicted 119 right out of 154, it also predicted 12 false positive and 23 false negative
 
+the line on the table are the is the reality and the columns if the predicted. Our model predicted 119 right out of 154, it also predicted 12 false positive and 23 false negative
 
-### K-Nearest Model
+### K-Nearest Neighbors Model
+
 ```{r include=FALSE}
 #downloading the libraries
 library(class)
 ```
 
-We are going to apply our model K Nearst Neighbours with 5 neighbours
+We are going to apply our model K Nearest Neighbors with 5 Neighbors
+
 ```{r echo=FALSE}
 #applying the KNN algorithm
 knn_predictions <- knn(train = trainFeatures, test = testFeatures, cl = trainLabels, k=5)
@@ -254,5 +254,120 @@ the line on the table are the is the reality and the columns if the predicted. O
 
 ### Cross Validation
 
+We trained and tested our data set with a 80% of the data to train each of our model and 20% to test it Now we are going to observe the results for each of our models with a different split to evaluate their robustness and define which one is better
+
+For that We are going to divide our data set in five equal part and train our model 15 time. On each training we'll train the model on 14 folds then test it on the 15th
+
+```{r include=FALSE}
+#Preparing the data to be treated by the algorithms
+trainCV <- diabetes_scaled  %>% select(-BMICategory, -BPCategory)
+trainCV$Outcome <- ifelse(trainCV$Outcome == "Diabetic", 1, 0)
+
+#determining the number of folds
+n<-15
+
+#slitting the data into n folds
+folds <- split(trainCV, factor(sort(rank(row.names(trainCV))%%n)))
+```
+
+```{r echo = FALSE}
+#creating the variable with which we'll record the 
+accuracyLR<-c()
+accuracyKNN <-c()
+
+for(i in 1:n){
+  test_fold  <- folds[[i]]
+  train_fold <- do.call(rbind, folds[-i])
+  
+  #Logistic Regression Model 
+  logistic_model <- glm(Outcome ~ ., data = train_fold, family = binomial)
+  # Prediction on our test data
+  logistic_prediction <- ifelse(predict(logistic_model, newdata = test_fold%>%select(-Outcome), type ="response") > 0.5,  1, 0)
+  
+  #Registering the accuracy for this fold
+  accuracyLR <- c(accuracyLR, mean(logistic_prediction == test_fold$Outcome))
+  
+  
+  #KNN Model 
+  knn_predictions <- knn(train = train_fold%>%select(-Outcome), test = test_fold%>%select(-Outcome), cl = train_fold$Outcome, k=5)
+  
+  #Registering the accuracy for this fold
+  accuracyKNN <- c(accuracyKNN, mean(knn_predictions == test_fold$Outcome))
+}
+
+cat(sprintf("Mean accuracy for Logistic Regression Model : %.3f\n", mean(accuracyLR)))
+cat(sprintf("Mean accuracy for K-Nearest Neighbors Model : %.3f\n", mean(accuracyKNN)))
+```
+
+After doing our Cross-Validation we can observe that our accuracy is higher when using the Logistic Regression Model than the K-Nearest Neighbors Model with accuracies of 77.2% and 73% respectively
+
+To check the robustness of the model we are going to plot the accuracies for all our 15 iterations
+
+```{r echo=FALSE}
+df <- data.frame(
+  Fold = 1:n,
+  LRModel = accuracyLR,
+  KNNModel = accuracyKNN
+)
+
+ggplot(df, aes(x=Fold)) +
+  geom_line(aes(y=LRModel, color="Logistic Regression")) +
+  geom_line(aes(y=KNNModel, color="K-Nearest Neighbors")) +
+  ylim(0,1) +
+  labs(title="Logistic Regression vs K-Nearest Neighbors Model Accuracy", y="Accuracy") +
+  scale_color_manual("", values=c("K-Nearest Neighbors"="blue", "Logistic Regression"="red"))
+```
+
+We can observe on the plot that the accuracy of the Logistic Regression Model is much more consistent. We can determine that the Logistic Regression Model is the more robust of the two and will give better results
 
 ### Analyzing the Impact of Cleaning
+First we'll scaled our uncleaned data 
+```{r include=FALSE}
+#Preparing the data to be treated by the algorithms
+trainDirty <- not_cleaned_diabetes%>% mutate(across(where(is.numeric)& !last_col(), scale))
+
+#determining the number of folds
+
+#slitting the data into n folds
+foldsDirty <- split(trainDirty, factor(sort(rank(row.names(trainDirty))%%n)))
+```
+Then we'll Cross-validate it like we did previously
+```{r echo = FALSE}
+#creating the variable with which we'll record the accuracy of the model 
+accuracyLRDirty<-c()
+
+for(i in 1:n){
+  test_fold  <- foldsDirty[[i]]
+  train_fold <- do.call(rbind, foldsDirty[-i])
+  
+  #Logistic Regression Model 
+  logistic_model <- glm(Outcome ~ ., data = train_fold, family = binomial)
+  # Prediction on our test data
+  logistic_prediction <- ifelse(predict(logistic_model, newdata = test_fold%>%select(-Outcome), type ="response") > 0.5,  1, 0)
+  
+  #Registering the accuracy for this fold
+  accuracyLRDirty <- c(accuracyLRDirty, mean(logistic_prediction == test_fold$Outcome))
+}
+
+cat(sprintf("Mean accuracy for Logistic Regression Model before cleaning : %.3f\n", mean(accuracyLRDirty)))
+```
+We obtain an accuracy of 77.6% which slightly higher than the accuracy of the same model with cleaned data (77.2%)
+This could come from the higher variance in the unclean data
+But That doesn't indicate that the using unclean data make the model more robust. To observe that we are going to plot the accuracies on the folds
+
+```{r echo=FALSE}
+df <- data.frame(
+  Fold = 1:n,
+  dirty_data = accuracyLRDirty,
+  cleaned_data = accuracyLR
+)
+
+ggplot(df, aes(x=Fold)) +
+  geom_line(aes(y=dirty_data, color="Dirty Data")) +
+  geom_line(aes(y=cleaned_data, color="Cleaned Data")) +
+  ylim(0,1) +
+  labs(title="Dirty Data vs Cleaned Data Accuracy", y="Accuracy") +
+  scale_color_manual("", values=c("Dirty Data"="blue", "Cleaned Data"="red"))
+```
+We can observe that there the Model's accuracy is more stable when using the cleaned data and therefore more robust.
+Using cleaned Data is of critical important to avoid overfitting and have a better generalisation of our model
