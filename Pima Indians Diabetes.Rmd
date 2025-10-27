@@ -17,9 +17,12 @@ After cleaning invalid values, features are standardized and categorized, visual
 
 ```{r include=FALSE}
 #install.packages("dplyr")
+# install.packages("tidyr")
 library(dplyr)
 library(gridExtra)
-
+library(ggplot2)
+library(reshape2)
+library(GGally)
 ```
 
 ```{r echo=FALSE}
@@ -111,14 +114,13 @@ diabetes_scaled
 
 `cleaned_outcome_diabetes` is our data set before the first step, so not cleaned at all. with missing values and incoherences.
 
-```{r}
+```{r echo=FALSE}
 cleaned_outcome_diabetes <- raw_diabetes %>% mutate(
   Outcome = case_when(
     Outcome == 1 ~ "Diabetic",
     .default = "Not Diabetic"
   )
 )
-library(ggplot2)
 p1 <- ggplot(cleaned_outcome_diabetes, aes(x = Glucose, fill = as.factor(Outcome))) +
   geom_density(alpha = 0.5) +
   labs(title = "Glucose (not cleaned)", x = "Glucose", y = "Density") +
@@ -142,7 +144,7 @@ These curves show that the glucose variable is a good indicator for distinguishi
 
 Now let's compare distribution for the 'BMI' and 'Age' variables to show their distribution between diabetic and non-diabetic patients.
 
-```{r}
+```{r echo=FALSE}
 p3 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = BMI, fill = as.factor(Outcome))) +
   geom_boxplot() +
   labs(title = "BMI by Outcome", x = "Outcome", y = "BMI") +
@@ -153,7 +155,7 @@ p4 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = Age, fill = as.factor(Out
   labs(title = "Age by Outcome", x = "Outcome", y = "Âge") +
   theme_minimal()
 
-grid.arrange(p3, p4, ncol = 2)
+grid.arrange(p3, p4, ncol = 2, top = "With cleaned data")
 ```
 
 For the BMI graph, diabetic patients often have a higher BMI (overweight/obese), which is a known risk factor for diabetes. That's why the box plots show a higher median for diabetics.
@@ -162,38 +164,32 @@ And for the age graph, type 2 diabetes is more common in older people, so the ag
 
 Now we can compared theses graphs with those we would have had if we hadn't cleaned our data
 
-```{r}
+```{r echo=FALSE}
 p5 <- ggplot(cleaned_outcome_diabetes, aes(x = as.factor(Outcome), y = BMI, 
                                         fill = as.factor(Outcome))) +
   geom_boxplot() +
-  labs(title = "BMI (not cleaned)", x = "Outcome", y = "BMI") +
+  labs(title = "BMI by Outcome", x = "Outcome", y = "BMI") +
   theme_minimal()
 
 p6 <- ggplot(cleaned_outcome_diabetes, aes(x = as.factor(Outcome), y = Age, 
                            fill = as.factor(Outcome))) +
   geom_boxplot() +
-  labs(title = "BMI (cleaned)", x = "Outcome", y = "BMI") +
+  labs(title = "Age by Outcome", x = "Outcome", y = "BMI") +
   theme_minimal()
 
-grid.arrange(p5, p6, ncol = 2)
+grid.arrange(p5, p6, ncol = 2, top = "With not cleaned data")
 ```
 
 The age graph is no different from that of the cleaned dataset. This is simply because we did not modify the “age” column during the data cleaning step.
 
 Unlike the BMI graph of the uncleaned data, where we see values such as 0 appearing, which can alter the median value.
 
-```{r}
+```{r echo=FALSE}
 # Select only numerical variables (exclude Outcome if it's a factor)
 numerical_vars <- diabetes %>% 
   select(where(is.numeric), -Outcome)  # Exclude Outcome from correlation
 
 correlation_matrix <- cor(numerical_vars, use = "complete.obs")
-
-# Print correlation matrix
-print(round(correlation_matrix, 2))
-
-library(reshape2)  
-
 correlation_long <- melt(correlation_matrix)
 
 # Create heatmap
@@ -213,6 +209,44 @@ ggplot(correlation_long, aes(x = Var1, y = Var2, fill = value)) +
 We can see that **age and pregnancy** are fairly correlated, which makes sense. Generally, people are pregnant between the ages of 20 and 45, rarely younger and rarely older. In a same way with **BMI & SkinThickness** variable: These measurements are physiologically related
 
 The absence of severe multicollinearity indicates that all variables can be safely included in our predictive models without redundancy issues.
+
+```{r echo=FALSE}
+ggplot(diabetes, aes(x = Age, y = DiabetesPedigreeFunction, color = factor(Outcome))) +
+  geom_point(alpha = 0.7, size = 2) +
+  scale_color_manual(values = c("blue", "red"), 
+                     name = "Outcome",
+                     labels = c("No Diabetes", "Diabetes")) +
+  labs(
+    title = "Age vs Diabetes Pedigree Function",
+    x = "Age",
+    y = "Diabetes Pedigree Function"
+  ) +
+  theme_minimal()
+```
+
+```{r echo=FALSE}
+ggplot(diabetes_scaled, aes(x = Age, y = DiabetesPedigreeFunction, color = factor(Outcome))) +
+  geom_point(alpha = 0.7, size = 2) +
+  scale_color_manual(values = c("blue", "red"), 
+                     name = "Outcome",
+                     labels = c("No Diabetes", "Diabetes")) +
+  labs(
+    title = "Age vs Diabetes Pedigree Function",
+    x = "Age",
+    y = "Diabetes Pedigree Function"
+  ) +
+  theme_minimal()
+```
+
+```{r echo=FALSE}
+pairs_columns = colnames(raw_diabetes)
+pairs_columns = pairs_columns[pairs_columns != "Outcome"]
+ggpairs(
+  data = diabetes,
+  columns = pairs_columns,
+  mapping = aes(color = factor(Outcome), alpha = 0.6)
+)
+```
 
 # Step 4 : Modeling and Predicting (Data Science)
 
@@ -356,7 +390,7 @@ First we'll scaled our uncleaned data
 
 ```{r include=FALSE}
 #Preparing the data to be treated by the algorithms
-trainDirty <- not_cleaned_diabetes%>% mutate(across(where(is.numeric)& !last_col(), scale))
+trainDirty <- raw_diabetes %>% mutate(across(where(is.numeric)& !last_col(), scale))
 
 #determining the number of folds
 
