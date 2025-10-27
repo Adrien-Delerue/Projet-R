@@ -16,13 +16,16 @@ The project aims to predict diabetes in Pima Indian women using imperfect medica
 After cleaning invalid values, features are standardized and categorized, visualizations are created to explore patterns, and models (Logistic Regression and KNN) are trained and compared to show the impact of data cleaning.
 
 ```{r include=FALSE}
+#install.packages("dplyr")
 library(dplyr)
+library(gridExtra)
+
 ```
 
 ```{r echo=FALSE}
 # Loading the dataset
-diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
-summary(diabetes)
+raw_diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
+summary(raw_diabetes)
 ```
 
 # Step 1 : Data Cleaning and Preparation
@@ -44,7 +47,7 @@ We obtain the following summary :
 ```{r echo=FALSE}
 # Mutating each columns concern, if a value equals 0, it's replaced by an NA value
 selected_col <- c("Glucose", "BloodPressure", "SkinThickness", "BMI", "DiabetesPedigreeFunction")
-diabetes <- diabetes %>% mutate(across(all_of(selected_col), ~ na_if(., 0))) # Replace all 0 values with NA in the selected columns
+diabetes <- raw_diabetes %>% mutate(across(all_of(selected_col), ~ na_if(., 0))) # Replace all 0 values with NA in the selected columns
 # Across : apply the function for each col
 # ~ na_if(., 0) : replace 0 by NA for each col selected
 # . : current col
@@ -106,15 +109,17 @@ diabetes_scaled
 
 # Step 3: Visualization and Exploration (with ggplot2)
 
-```{r}
-not_cleaned_diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
-```
-
-`not_cleaned_diabete` is our data set before the first step, so not cleaned at all. with missing values and incoherences.
+`cleaned_outcome_diabetes` is our data set before the first step, so not cleaned at all. with missing values and incoherences.
 
 ```{r}
+cleaned_outcome_diabetes <- raw_diabetes %>% mutate(
+  Outcome = case_when(
+    Outcome == 1 ~ "Diabetic",
+    .default = "Not Diabetic"
+  )
+)
 library(ggplot2)
-p1 <- ggplot(not_cleaned_diabetes, aes(x = Glucose, fill = as.factor(Outcome))) +
+p1 <- ggplot(cleaned_outcome_diabetes, aes(x = Glucose, fill = as.factor(Outcome))) +
   geom_density(alpha = 0.5) +
   labs(title = "Glucose (not cleaned)", x = "Glucose", y = "Density") +
   theme_minimal()
@@ -124,7 +129,6 @@ p2 <- ggplot(diabetes, aes(x = Glucose, fill = as.factor(Outcome))) +
   labs(title = "Glucose (cleaned)", x = "Glucose", y = "Density") +
   theme_minimal()
 
-library(gridExtra)
 grid.arrange(p1, p2, ncol = 2)
 ```
 
@@ -136,6 +140,8 @@ For the second graph, as we cleaned data (where glucose's value was 0) the x sca
 
 These curves show that the glucose variable is a good indicator for distinguishing diabetic patients from non-diabetic patients. It could be a key variable in a predictive model.
 
+Now let's compare distribution for the 'BMI' and 'Age' variables to show their distribution between diabetic and non-diabetic patients.
+
 ```{r}
 p3 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = BMI, fill = as.factor(Outcome))) +
   geom_boxplot() +
@@ -144,7 +150,7 @@ p3 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = BMI, fill = as.factor(Out
 
 p4 <- ggplot(diabetes, aes(x = as.factor(Outcome), y = Age, fill = as.factor(Outcome))) +
   geom_boxplot() +
-  labs(title = "Âge by Outcome", x = "Outcome", y = "Âge") +
+  labs(title = "Age by Outcome", x = "Outcome", y = "Âge") +
   theme_minimal()
 
 grid.arrange(p3, p4, ncol = 2)
@@ -154,35 +160,59 @@ For the BMI graph, diabetic patients often have a higher BMI (overweight/obese),
 
 And for the age graph, type 2 diabetes is more common in older people, so the age distribution shows a higher concentration of diabetics in the older age groups.
 
+Now we can compared theses graphs with those we would have had if we hadn't cleaned our data
+
 ```{r}
-#install.packages("ggcorrplot") 
-library(ggcorrplot)
+p5 <- ggplot(cleaned_outcome_diabetes, aes(x = as.factor(Outcome), y = BMI, 
+                                        fill = as.factor(Outcome))) +
+  geom_boxplot() +
+  labs(title = "BMI (not cleaned)", x = "Outcome", y = "BMI") +
+  theme_minimal()
 
-numerical_data <- diabetes %>% select(where(is.numeric))
-cor_matrix <- cor(numerical_data, use = "complete.obs")
+p6 <- ggplot(cleaned_outcome_diabetes, aes(x = as.factor(Outcome), y = Age, 
+                           fill = as.factor(Outcome))) +
+  geom_boxplot() +
+  labs(title = "BMI (cleaned)", x = "Outcome", y = "BMI") +
+  theme_minimal()
 
-biserial_cor <- sapply(numerical_data, function(x) cor(x, diabetes$Outcome, method = "pearson"))
-
-cor_matrix_with_outcome <- rbind(cor_matrix, biserial_cor)
-rownames(cor_matrix_with_outcome)[nrow(cor_matrix_with_outcome)] <- "Outcome"
-colnames(cor_matrix_with_outcome)[ncol(cor_matrix_with_outcome)] <- "Outcome"
-
-
-ggcorrplot(
-  cor_matrix_with_outcome,
-  hc.order = TRUE,
-  type = "upper",
-  lab = TRUE,
-  lab_size = 3,
-  method = "circle",
-  colors = c("tomato2", "white", "springgreen3"),
-  title = "Correlation Matrix (Including Outcome)",
-  show.legend = TRUE,
-  legend.title = "Correlation"
-)
+grid.arrange(p5, p6, ncol = 2)
 ```
 
-We can see that age and pregnancy are fairly correlated, which makes sense. Generally, people are pregnant between the ages of 20 and 45, rarely younger and rarely older.
+The age graph is no different from that of the cleaned dataset. This is simply because we did not modify the “age” column during the data cleaning step.
+
+Unlike the BMI graph of the uncleaned data, where we see values such as 0 appearing, which can alter the median value.
+
+```{r}
+# Select only numerical variables (exclude Outcome if it's a factor)
+numerical_vars <- diabetes %>% 
+  select(where(is.numeric), -Outcome)  # Exclude Outcome from correlation
+
+correlation_matrix <- cor(numerical_vars, use = "complete.obs")
+
+# Print correlation matrix
+print(round(correlation_matrix, 2))
+
+library(reshape2)  
+
+correlation_long <- melt(correlation_matrix)
+
+# Create heatmap
+ggplot(correlation_long, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = round(value, 2)), color = "black", size = 3) +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1, 1),
+                       name = "Correlation") +
+  labs(title = "Correlation Heatmap of Medical Variables",
+       x = "", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        plot.title = element_text(hjust = 0.5, face = "bold"))
+```
+
+We can see that **age and pregnancy** are fairly correlated, which makes sense. Generally, people are pregnant between the ages of 20 and 45, rarely younger and rarely older. In a same way with **BMI & SkinThickness** variable: These measurements are physiologically related
+
+The absence of severe multicollinearity indicates that all variables can be safely included in our predictive models without redundancy issues.
 
 # Step 4 : Modeling and Predicting (Data Science)
 
@@ -321,7 +351,9 @@ ggplot(df, aes(x=Fold)) +
 We can observe on the plot that the accuracy of the Logistic Regression Model is much more consistent. We can determine that the Logistic Regression Model is the more robust of the two and will give better results
 
 ### Analyzing the Impact of Cleaning
-First we'll scaled our uncleaned data 
+
+First we'll scaled our uncleaned data
+
 ```{r include=FALSE}
 #Preparing the data to be treated by the algorithms
 trainDirty <- not_cleaned_diabetes%>% mutate(across(where(is.numeric)& !last_col(), scale))
@@ -331,7 +363,9 @@ trainDirty <- not_cleaned_diabetes%>% mutate(across(where(is.numeric)& !last_col
 #slitting the data into n folds
 foldsDirty <- split(trainDirty, factor(sort(rank(row.names(trainDirty))%%n)))
 ```
+
 Then we'll Cross-validate it like we did previously
+
 ```{r echo = FALSE}
 #creating the variable with which we'll record the accuracy of the model 
 accuracyLRDirty<-c()
@@ -351,9 +385,8 @@ for(i in 1:n){
 
 cat(sprintf("Mean accuracy for Logistic Regression Model before cleaning : %.3f\n", mean(accuracyLRDirty)))
 ```
-We obtain an accuracy of 77.6% which slightly higher than the accuracy of the same model with cleaned data (77.2%)
-This could come from the higher variance in the unclean data
-But That doesn't indicate that the using unclean data make the model more robust. To observe that we are going to plot the accuracies on the folds
+
+We obtain an accuracy of 77.6% which slightly higher than the accuracy of the same model with cleaned data (77.2%) This could come from the higher variance in the unclean data But That doesn't indicate that the using unclean data make the model more robust. To observe that we are going to plot the accuracies on the folds
 
 ```{r echo=FALSE}
 df <- data.frame(
@@ -369,5 +402,5 @@ ggplot(df, aes(x=Fold)) +
   labs(title="Dirty Data vs Cleaned Data Accuracy", y="Accuracy") +
   scale_color_manual("", values=c("Dirty Data"="blue", "Cleaned Data"="red"))
 ```
-We can observe that there the Model's accuracy is more stable when using the cleaned data and therefore more robust.
-Using cleaned Data is of critical important to avoid overfitting and have a better generalisation of our model
+
+We can observe that there the Model's accuracy is more stable when using the cleaned data and therefore more robust. Using cleaned Data is of critical important to avoid overfitting and have a better generalisation of our model
