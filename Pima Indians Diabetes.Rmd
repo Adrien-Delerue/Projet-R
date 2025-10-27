@@ -49,7 +49,7 @@ We obtain the following summary :
 
 ```{r echo=FALSE}
 # Mutating each columns concern, if a value equals 0, it's replaced by an NA value
-selected_col <- c("Glucose", "BloodPressure", "SkinThickness", "BMI", "DiabetesPedigreeFunction")
+selected_col <- c("Glucose", "BloodPressure", "SkinThickness", "BMI", "DiabetesPedigreeFunction", "Insulin")
 diabetes <- raw_diabetes %>% mutate(across(all_of(selected_col), ~ na_if(., 0))) # Replace all 0 values with NA in the selected columns
 # Across : apply the function for each col
 # ~ na_if(., 0) : replace 0 by NA for each col selected
@@ -112,7 +112,7 @@ diabetes_scaled
 
 # Step 3: Visualization and Exploration (with ggplot2)
 
-`cleaned_outcome_diabetes` is our data set before the first step, so not cleaned at all. with missing values and incoherences.
+`cleaned_outcome_diabetes` is our data set before the first step, so not cleaned at all. with missing values and incoherences (only outcomes as been associated to strings).
 
 ```{r echo=FALSE}
 cleaned_outcome_diabetes <- raw_diabetes %>% mutate(
@@ -213,9 +213,6 @@ The absence of severe multicollinearity indicates that all variables can be safe
 ```{r echo=FALSE}
 ggplot(diabetes, aes(x = Age, y = DiabetesPedigreeFunction, color = factor(Outcome))) +
   geom_point(alpha = 0.7, size = 2) +
-  scale_color_manual(values = c("blue", "red"), 
-                     name = "Outcome",
-                     labels = c("No Diabetes", "Diabetes")) +
   labs(
     title = "Age vs Diabetes Pedigree Function",
     x = "Age",
@@ -224,29 +221,45 @@ ggplot(diabetes, aes(x = Age, y = DiabetesPedigreeFunction, color = factor(Outco
   theme_minimal()
 ```
 
-```{r echo=FALSE}
-ggplot(diabetes_scaled, aes(x = Age, y = DiabetesPedigreeFunction, color = factor(Outcome))) +
-  geom_point(alpha = 0.7, size = 2) +
-  scale_color_manual(values = c("blue", "red"), 
-                     name = "Outcome",
-                     labels = c("No Diabetes", "Diabetes")) +
-  labs(
-    title = "Age vs Diabetes Pedigree Function",
-    x = "Age",
-    y = "Diabetes Pedigree Function"
-  ) +
-  theme_minimal()
-```
+We can see that when both the Diabetes Pedigree Function and Age are low, there is still a considerable chance of being diabetic. However, the two colors are heavily mixed, so we cannot distinguish a clear separation between the two classes based on these two features alone.
+
+We can visualize this graphe for each column available
 
 ```{r echo=FALSE}
-pairs_columns = colnames(raw_diabetes)
-pairs_columns = pairs_columns[pairs_columns != "Outcome"]
 ggpairs(
   data = diabetes,
-  columns = pairs_columns,
+  columns = colnames(numerical_vars),
   mapping = aes(color = factor(Outcome), alpha = 0.6)
 )
 ```
+
+Here, we can observe some interesting plots, such as Skin Thickness vs. BMI and Glucose vs. Blood Pressure. So let's zoom on them :
+
+```{r echo=FALSE}
+ggplot(diabetes, aes(x = Insulin, y = SkinThickness, color = factor(Outcome))) +
+  geom_point(alpha = 0.5, size = 5) +
+  labs(
+    title = "Insulin vs SkinThickness",
+    x = "Insulin",
+    y = "SkinThickness"
+  ) +
+  theme_minimal()
+```
+
+Here we have two main clusters appear. Non-diabetic individuals (blue) mostly occupy the lower-left, with low Insulin and thin skinfolds. Diabetic individuals (pink) are more spread out, showing higher Insulin and more variable Skin Thickness.
+
+```{r echo=FALSE}
+ggplot(diabetes, aes(x = Glucose, y = BloodPressure, color = factor(Outcome))) +
+  geom_point(alpha = 0.5, size = 5) +
+  labs(
+    title = "Glucose vs BloodPressure",
+    x = "Glucose",
+    y = "Blood Pressure"
+  ) +
+  theme_minimal()
+```
+
+The plot reveals two main clusters: on the left, a blue cluster representing mostly non-diabetic individuals (with relatively low glucose levels and blood pressure), and on the right, a pink cluster representing individuals with diabetes.
 
 # Step 4 : Modeling and Predicting (Data Science)
 
