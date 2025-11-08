@@ -140,16 +140,16 @@ diabetes_scaled
 
 # Step 3: Visualization and Exploration (with ggplot2)
 
-`cleaned_outcome_diabetes` is our data set before the first step, so not cleaned at all. with missing values and incoherences (only outcomes as been associated to strings).
+`renamed_outcome_diabetes` is our data set before the first step, so not cleaned at all with missing values and incoherences (only outcomes as been associated to strings).
 
 ```{r echo=FALSE}
-cleaned_outcome_diabetes <- raw_diabetes %>% mutate(
+renamed_outcome_diabetes <- raw_diabetes %>% mutate(
   Outcome = case_when(
     Outcome == 1 ~ "Diabetic",
     .default = "Not Diabetic"
   )
 )
-p1 <- ggplot(cleaned_outcome_diabetes, aes(x = Glucose, fill = as.factor(Outcome))) +
+p1 <- ggplot(renamed_outcome_diabetes, aes(x = Glucose, fill = as.factor(Outcome))) +
   geom_density(alpha = 0.5) +
   labs(title = "Glucose (not cleaned)", x = "Glucose", y = "Density") +
   theme_minimal()
@@ -164,7 +164,7 @@ grid.arrange(p1, p2, ncol = 2)
 
 For the first graph:
 
-The **blue curve** represen non-diabetic's patient. Their curve is centered around lower glucose values. In the other hand, the **red curve** are diabetic's patient is shifted to the right, indicating higher glucose levels. The blue curve extends further right, suggesting greater variability in glucose levels among diabetics.
+The **blue curve** represent non-diabetic's patient. Their curve is centered around lower glucose values. In the other hand, the **red curve** are diabetic's patient is shifted to the right, indicating higher glucose levels. The blue curve extends further right, suggesting greater variability in glucose levels among diabetics.
 
 For the second graph, as we cleaned data (where glucose's value was 0) the x scale is shifted to the right. We can see that the overlap is reduced, making it easier to distinguish between the two groups. (That's why its really important to clean our data before analyse them, in order to make a better investigation)
 
@@ -193,13 +193,13 @@ And for the age graph, type 2 diabetes is more common in older people, so the ag
 Now we can compared theses graphs with those we would have had if we hadn't cleaned our data
 
 ```{r echo=FALSE}
-p5 <- ggplot(cleaned_outcome_diabetes, aes(x = as.factor(Outcome), y = BMI, 
+p5 <- ggplot(renamed_outcome_diabetes, aes(x = as.factor(Outcome), y = BMI, 
                                         fill = as.factor(Outcome))) +
   geom_boxplot() +
   labs(title = "BMI by Outcome", x = "Outcome", y = "BMI") +
   theme_minimal()
 
-p6 <- ggplot(cleaned_outcome_diabetes, aes(x = as.factor(Outcome), y = Age, 
+p6 <- ggplot(renamed_outcome_diabetes, aes(x = as.factor(Outcome), y = Age, 
                            fill = as.factor(Outcome))) +
   geom_boxplot() +
   labs(title = "Age by Outcome", x = "Outcome", y = "BMI") +
@@ -234,9 +234,9 @@ ggplot(correlation_long, aes(x = Var1, y = Var2, fill = value)) +
         plot.title = element_text(hjust = 0.5, face = "bold"))
 ```
 
-We can see that **age and pregnancy** are fairly correlated, which makes sense. Generally, people are pregnant between the ages of 20 and 45, rarely younger and rarely older. In a same way with **BMI & SkinThickness** variable: These measurements are physiologically related
+We can see that **age and pregnancy** are fairly correlated, which makes sense. Generally, the older you are, the more likely you are to have been pregnant. In a same way with **BMI & SkinThickness** variable: These measurements are physiologically related
 
-The absence of severe multicollinearity indicates that all variables can be safely included in our predictive models without redundancy issues.
+Despite these small correlations (barely exceeding 0.5). We observe the absence of severe multicollinearity indicates that all variables can be safely included in our predictive models without redundancy issues.
 
 ```{r echo=FALSE}
 ggplot(diabetes, aes(x = Age, y = DiabetesPedigreeFunction, color = factor(Outcome))) +
@@ -251,7 +251,7 @@ ggplot(diabetes, aes(x = Age, y = DiabetesPedigreeFunction, color = factor(Outco
 
 We can see that when both the Diabetes Pedigree Function and Age are low, there is still a considerable chance of being diabetic. However, the two colors are heavily mixed, so we cannot distinguish a clear separation between the two classes based on these two features alone.
 
-We can visualize this graphe for each column available
+We can visualize this graph for each column available
 
 ```{r echo=FALSE}
 ggpairs(
