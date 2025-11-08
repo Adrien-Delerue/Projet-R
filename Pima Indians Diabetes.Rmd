@@ -84,9 +84,9 @@ diabetes <- raw_diabetes %>% mutate(across(all_of(selected_col), ~ na_if(., 0)))
 summary(diabetes)
 ```
 
-Under the columns, you can see the number of NA values that have been placed, which correspond to the number of errors/missinformation that existed before the operation.
+Under the columns, you can see the number of NA values that have been placed, which correspond to the number of errors/misinformation that existed before the operation.
 
-Now we are going to replace those NA values by the median of each columns. We obtain the following summary :
+Now we are going to replace those NA values by the median of each columns. We chose to replace by the median because it isn't affected by extreme values like the mean so it's closer to reality. We obtain the following summary :
 
 ```{r echo=FALSE}
 # Mutating each columns concern, if a value equals NA, it's replaced by the median of the corresponding columns else it stays the same
