@@ -298,7 +298,7 @@ trainDF <- trainData  %>% select(-BMICategory, -BPCategory)
 trainDF$Outcome <- ifelse(trainDF$Outcome == "Diabetic", 1, 0)
 ```
 
-```{r echo=FALSE}
+```{r include=FALSE}
 # training the model
 logistic_model <- glm(Outcome ~ ., data = trainDF, family = binomial)
 
@@ -307,6 +307,11 @@ logistic_prediction <- ifelse(predict(logistic_model, newdata = testFeatures, ty
 
 table(logistic_prediction, testData$Outcome)
 ```
+
+| Logistic Prediction | Diabetic | Not Diabetic |
+|---------------------|----------|--------------|
+| Not Diabetic        | 23       | 90           |
+| Diabetic            | 29       | 12           |
 
 the line on the table are the is the reality and the columns if the predicted. Our model predicted 119 right out of 154, it also predicted 12 false positive and 23 false negative
 
@@ -319,13 +324,18 @@ library(class)
 
 We are going to apply our model K Nearest Neighbors with 5 Neighbors
 
-```{r echo=FALSE}
+```{r include=FALSE}
 #applying the KNN algorithm
 knn_predictions <- knn(train = trainFeatures, test = testFeatures, cl = trainLabels, k=5)
 
 table(knn_predictions, testData$Outcome)
 
 ```
+
+| K-Nearest Neighbors | Diabetic | Not Diabetic |
+|---------------------|----------|--------------|
+| Not Diabetic        | 15       | 87           |
+| Diabetic            | 35       | 15           |
 
 the line on the table are the is the reality and the columns if the predicted. Our model predicted 121 right out of 154, it also predicted 11 false positive and 22 false negative
 
