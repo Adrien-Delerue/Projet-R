@@ -162,9 +162,9 @@ p2 <- ggplot(diabetes, aes(x = Glucose, fill = as.factor(Outcome))) +
 grid.arrange(p1, p2, ncol = 2)
 ```
 
-For the two graphs:
+For the first graph:
 
-The **red curve** represent non-diabetic's patient. Their curve is centered around lower glucose values. In the other hand, the **blue curve** are diabetic's patient is shifted to the right, indicating higher glucose levels. The blue curve extends further right, suggesting greater variability in glucose levels among diabetics.
+The **blue curve** represen non-diabetic's patient. Their curve is centered around lower glucose values. In the other hand, the **red curve** are diabetic's patient is shifted to the right, indicating higher glucose levels. The blue curve extends further right, suggesting greater variability in glucose levels among diabetics.
 
 For the second graph, as we cleaned data (where glucose's value was 0) the x scale is shifted to the right. We can see that the overlap is reduced, making it easier to distinguish between the two groups. (That's why its really important to clean our data before analyse them, in order to make a better investigation)
 
