@@ -18,12 +18,13 @@ The project aims to predict diabetes in Pima Indian women using imperfect medica
 After cleaning invalid values, features are standardized and categorized, visualizations are created to explore patterns, and models (Logistic Regression and KNN) are trained and compared to show the impact of data cleaning.
 
 ```{r include=FALSE}
-# install.packages(c("ggplot2", "dplyr", "tidyr", "readr", "lubridate", "caret"))
+# install.packages(c("ggplot2", "dplyr", "tidyr", "readr", "lubridate", "caret", "class"))
 library(dplyr)
 library(gridExtra)
 library(ggplot2)
 library(reshape2)
 library(GGally)
+library(class)
 ```
 
 ```{r echo=FALSE}
@@ -249,9 +250,9 @@ ggplot(diabetes, aes(x = Age, y = DiabetesPedigreeFunction, color = factor(Outco
   theme_minimal()
 ```
 
-We can see that when both the Diabetes Pedigree Function and Age are low, there is still a considerable chance of being diabetic. However, the two colors are heavily mixed, so we cannot distinguish a clear separation between the two classes based on these two features alone.
+We can see that when both the Diabetes Pedigree Function and Age are low, there is still a considerable chance of being diabetic. However, the two colors are heavily mixed, as the correlation between both is 0.03, so we cannot distinguish a clear separation between the two classes based on these two features alone.
 
-We can visualize this graph for each column available
+We can visualize this graph for each pair of columns available
 
 ```{r echo=FALSE}
 ggpairs(
@@ -274,7 +275,7 @@ ggplot(diabetes, aes(x = Insulin, y = SkinThickness, color = factor(Outcome))) +
   theme_minimal()
 ```
 
-Here we have two main clusters appear. Non-diabetic individuals (blue) mostly occupy the lower-left, with low Insulin and thin skinfolds. Diabetic individuals (pink) are more spread out, showing higher Insulin and more variable Skin Thickness.
+Here we have two main clusters appear. Non-diabetic individuals (blue) mostly occupy the lower-left, with low Insulin and thin skinfolds. Diabetic individuals (red) are more spread out, showing higher Insulin and more variable Skin Thickness.
 
 ```{r echo=FALSE}
 ggplot(diabetes, aes(x = Glucose, y = BloodPressure, color = factor(Outcome))) +
@@ -287,7 +288,7 @@ ggplot(diabetes, aes(x = Glucose, y = BloodPressure, color = factor(Outcome))) +
   theme_minimal()
 ```
 
-The plot reveals two main clusters: on the left, a blue cluster representing mostly non-diabetic individuals (with relatively low glucose levels and blood pressure), and on the right, a pink cluster representing individuals with diabetes.
+The plot reveals two main clusters: on the left, a blue cluster representing mostly non-diabetic individuals (with relatively low glucose levels and blood pressure), and on the right, a red cluster representing individuals with diabetes.
 
 # Step 4 : Modeling and Predicting (Data Science)
 
@@ -297,37 +298,37 @@ First we are going to divide our cleaned data set in 2 groups, the training data
 # Randomly shuffling the data
 set.seed(123)
 
-#determining the size of the sampling
+# Determining the size of the sampling
 sampleIndex <- sample(1:nrow(diabetes_scaled), 0.8 * nrow(diabetes_scaled))
 
-#splitting our cleaned and scaled data
+# Splitting our cleaned and scaled data
 trainData <- diabetes_scaled[sampleIndex, ]
 testData <- diabetes_scaled[-sampleIndex, ]
 ```
 
-We are going to use 4 different algorithms, logistic Regression Model, K-nearest Model and Cross-Validation, then we'll analyze the impact of cleaning
+We are going to use 2 different algorithms, logistic Regression Model and K-nearest Model. Then we'll use Cross-Validation on them, and finally we'll analyze the impact of cleaning.
 
 But before we apply any of our model we are going to prepare our data, separating the input from the outputs
 
 ```{r include=FALSE}
-#we take out the non-numerical and the Outcome out of our input data
+# We take out the non-numerical and the Outcome out of our input data
 trainFeatures <- trainData[, 1:(ncol(trainData)-3)]
 testFeatures  <- testData[, 1:(ncol(testData)-3)]
 
-#we prepare our training output
+# We prepare our training output
 trainLabels   <- trainData$Outcome
 ```
 
 ### Logistic Regression Model
 
 ```{r echo=FALSE}
-#adapting the data to the model
+# Adapting the data to the model
 trainDF <- trainData  %>% select(-BMICategory, -BPCategory)
 trainDF$Outcome <- ifelse(trainDF$Outcome == "Diabetic", 1, 0)
 ```
 
 ```{r include=FALSE}
-# training the model
+# Training the model
 logistic_model <- glm(Outcome ~ ., data = trainDF, family = binomial)
 
 # Prediction on our test data
@@ -336,77 +337,71 @@ logistic_prediction <- ifelse(predict(logistic_model, newdata = testFeatures, ty
 table(logistic_prediction, testData$Outcome)
 ```
 
-| Logistic Prediction | Diabetic | Not Diabetic |
-|---------------------|----------|--------------|
-| Not Diabetic        | 23       | 90           |
-| Diabetic            | 29       | 12           |
+| Logistic Regression    | Real Diabetic |  Real Not Diabetic |
+|------------------------|---------------|--------------------|
+| Predicted Not Diabetic | 23            | 90                 |
+| Predicted Diabetic     | 29            | 12                 |
 
-the line on the table are the is the reality and the columns if the predicted. Our model predicted 119 right out of 154, it also predicted 12 false positive and 23 false negative
+The lines on the table are the reality and the columns are the predicted. Our model predicted 119 (90+29) right out of 154 (77% of accuracy) and it predicted 12 false positive and 23 false negative.
 
 ### K-Nearest Neighbors Model
-
-```{r include=FALSE}
-#downloading the libraries
-library(class)
-```
 
 We are going to apply our model K Nearest Neighbors with 5 Neighbors
 
 ```{r include=FALSE}
-#applying the KNN algorithm
+# Applying the KNN algorithm
 knn_predictions <- knn(train = trainFeatures, test = testFeatures, cl = trainLabels, k=5)
 
 table(knn_predictions, testData$Outcome)
-
 ```
 
-| K-Nearest Neighbors | Diabetic | Not Diabetic |
-|---------------------|----------|--------------|
-| Not Diabetic        | 15       | 87           |
-| Diabetic            | 35       | 15           |
+| K-Nearest Neighbors     | Real Diabetic | Real Not Diabetic |
+|-------------------------|---------------|-------------------|
+| Predicated Not Diabetic | 17            | 87                |
+| Predicated Diabetic     | 35            | 15                |
 
-the line on the table are the is the reality and the columns if the predicted. Our model predicted 121 right out of 154, it also predicted 11 false positive and 22 false negative
+The lines on the table are the reality and the columns are the predicted. Our model predicted 122 (87+35) right out of 154 (79% of accuracy), it also predicted 17 false positive and 15 false negative.
 
 ### Cross Validation
 
-We trained and tested our data set with a 80% of the data to train each of our model and 20% to test it Now we are going to observe the results for each of our models with a different split to evaluate their robustness and define which one is better
+We trained and tested our model with a 80% of the data and 20% to test it. Now we are going to observe the results for each of our models with a different split to evaluate their robustness and define which one is better
 
 For that We are going to divide our data set in five equal part and train our model 15 time. On each training we'll train the model on 14 folds then test it on the 15th
 
 ```{r include=FALSE}
-#Preparing the data to be treated by the algorithms
+# Preparing the data to be treated by the algorithms
 trainCV <- diabetes_scaled  %>% select(-BMICategory, -BPCategory)
 trainCV$Outcome <- ifelse(trainCV$Outcome == "Diabetic", 1, 0)
 
-#determining the number of folds
-n<-15
+# Determining the number of folds
+n <- 15
 
-#slitting the data into n folds
+# Slitting the data into n folds
 folds <- split(trainCV, factor(sort(rank(row.names(trainCV))%%n)))
 ```
 
 ```{r echo = FALSE}
-#creating the variable with which we'll record the 
-accuracyLR<-c()
-accuracyKNN <-c()
+# Creating the variable with which we'll record the 
+accuracyLR <- c()
+accuracyKNN <- c()
 
 for(i in 1:n){
   test_fold  <- folds[[i]]
   train_fold <- do.call(rbind, folds[-i])
   
-  #Logistic Regression Model 
+  # Logistic Regression Model 
   logistic_model <- glm(Outcome ~ ., data = train_fold, family = binomial)
   # Prediction on our test data
   logistic_prediction <- ifelse(predict(logistic_model, newdata = test_fold%>%select(-Outcome), type ="response") > 0.5,  1, 0)
   
-  #Registering the accuracy for this fold
+  # Registering the accuracy for this fold
   accuracyLR <- c(accuracyLR, mean(logistic_prediction == test_fold$Outcome))
   
   
-  #KNN Model 
+  # KNN Model 
   knn_predictions <- knn(train = train_fold%>%select(-Outcome), test = test_fold%>%select(-Outcome), cl = train_fold$Outcome, k=5)
   
-  #Registering the accuracy for this fold
+  # Registering the accuracy for this fold
   accuracyKNN <- c(accuracyKNN, mean(knn_predictions == test_fold$Outcome))
 }
 
@@ -440,31 +435,31 @@ We can observe on the plot that the accuracy of the Logistic Regression Model is
 First we'll scaled our uncleaned data
 
 ```{r include=FALSE}
-#Preparing the data to be treated by the algorithms
+# Preparing the data to be treated by the algorithms
 trainDirty <- raw_diabetes %>% mutate(across(where(is.numeric)& !last_col(), scale))
 
-#determining the number of folds
+# Determining the number of folds
 
-#slitting the data into n folds
+# Slitting the data into n folds
 foldsDirty <- split(trainDirty, factor(sort(rank(row.names(trainDirty))%%n)))
 ```
 
 Then we'll Cross-validate it like we did previously
 
 ```{r echo = FALSE}
-#creating the variable with which we'll record the accuracy of the model 
+# Creating the variable with which we'll record the accuracy of the model 
 accuracyLRDirty<-c()
 
 for(i in 1:n){
   test_fold  <- foldsDirty[[i]]
   train_fold <- do.call(rbind, foldsDirty[-i])
   
-  #Logistic Regression Model 
+  # Logistic Regression Model 
   logistic_model <- glm(Outcome ~ ., data = train_fold, family = binomial)
   # Prediction on our test data
   logistic_prediction <- ifelse(predict(logistic_model, newdata = test_fold%>%select(-Outcome), type ="response") > 0.5,  1, 0)
   
-  #Registering the accuracy for this fold
+  # Registering the accuracy for this fold
   accuracyLRDirty <- c(accuracyLRDirty, mean(logistic_prediction == test_fold$Outcome))
 }
 
