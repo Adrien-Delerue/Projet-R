@@ -364,9 +364,9 @@ The lines on the table are the reality and the columns are the predicted. Our mo
 
 ### Cross Validation
 
-We trained and tested our model with a 80% of the data and 20% to test it. Now we are going to observe the results for each of our models with a different split to evaluate their robustness and define which one is better
+We trained and tested our model with a 80% of the data and 20% to test it. Now we are going to observe the results for each of our models with a different split to evaluate their robustness and define which one is better.
 
-For that We are going to divide our data set in five equal part and train our model 15 time. On each training we'll train the model on 14 folds then test it on the 15th
+For that we are going to divide our dataset in 15 equal parts and train our models 15 times. On each training we'll train the model on 14 folds then test it on the 15th.
 
 ```{r include=FALSE}
 # Preparing the data to be treated by the algorithms
@@ -377,25 +377,31 @@ trainCV$Outcome <- ifelse(trainCV$Outcome == "Diabetic", 1, 0)
 n <- 15
 
 # Slitting the data into n folds
-folds <- split(trainCV, factor(sort(rank(row.names(trainCV))%%n)))
+folds <- split(trainCV, factor(sort(rank(row.names(trainCV)) %% n)))
 ```
 
 ```{r echo = FALSE}
 # Creating the variable with which we'll record the 
 accuracyLR <- c()
+falsePositiveLR <- c()
+falseNegativeLR <- c()
 accuracyKNN <- c()
 
-for(i in 1:n){
+# For each fold
+for(i in 1:n) {
   test_fold  <- folds[[i]]
-  train_fold <- do.call(rbind, folds[-i])
+  train_fold <- do.call(rbind, folds[-i]) # The others
   
   # Logistic Regression Model 
   logistic_model <- glm(Outcome ~ ., data = train_fold, family = binomial)
-  # Prediction on our test data
+  # Prediction on our test data (binarization)
   logistic_prediction <- ifelse(predict(logistic_model, newdata = test_fold%>%select(-Outcome), type ="response") > 0.5,  1, 0)
   
   # Registering the accuracy for this fold
   accuracyLR <- c(accuracyLR, mean(logistic_prediction == test_fold$Outcome))
+  falsePositiveLR <- c(falsePositiveLR, sum(test_fold$Outcome == 0 & logistic_prediction == 1))
+  
+  falseNegativeLR <- c(falseNegativeLR, sum(test_fold$Outcome == 1 & logistic_prediction == 0))
   
   
   # KNN Model 
@@ -409,9 +415,9 @@ cat(sprintf("Mean accuracy for Logistic Regression Model : %.3f\n", mean(accurac
 cat(sprintf("Mean accuracy for K-Nearest Neighbors Model : %.3f\n", mean(accuracyKNN)))
 ```
 
-After doing our Cross-Validation we can observe that our accuracy is higher when using the Logistic Regression Model than the K-Nearest Neighbors Model with accuracies of 77.2% and 73% respectively
+After doing our Cross-Validation we can observe that our accuracy is higher when using the Logistic Regression Model than the K-Nearest Neighbors Model with accuracies of 77.2% and 73% respectively.
 
-To check the robustness of the model we are going to plot the accuracies for all our 15 iterations
+To check the robustness of the model we are going to plot the accuracies for all our 15 iterations.
 
 ```{r echo=FALSE}
 df <- data.frame(
@@ -436,19 +442,19 @@ First we'll scaled our uncleaned data
 
 ```{r include=FALSE}
 # Preparing the data to be treated by the algorithms
-trainDirty <- raw_diabetes %>% mutate(across(where(is.numeric)& !last_col(), scale))
-
-# Determining the number of folds
+trainDirty <- raw_diabetes %>% mutate(across(where(is.numeric) & !last_col(), scale))
 
 # Slitting the data into n folds
-foldsDirty <- split(trainDirty, factor(sort(rank(row.names(trainDirty))%%n)))
+foldsDirty <- split(trainDirty, factor(sort(rank(row.names(trainDirty)) %% n)))
 ```
 
 Then we'll Cross-validate it like we did previously
 
 ```{r echo = FALSE}
 # Creating the variable with which we'll record the accuracy of the model 
-accuracyLRDirty<-c()
+accuracyLRDirty <- c()
+falsePositiveLRDirty <- c()
+falseNegativeLRDirty <- c()
 
 for(i in 1:n){
   test_fold  <- foldsDirty[[i]]
@@ -461,6 +467,10 @@ for(i in 1:n){
   
   # Registering the accuracy for this fold
   accuracyLRDirty <- c(accuracyLRDirty, mean(logistic_prediction == test_fold$Outcome))
+  
+  falsePositiveLRDirty <- c(falsePositiveLRDirty, sum(test_fold$Outcome == 0 & logistic_prediction == 1))
+  
+  falseNegativeLRDirty <- c(falseNegativeLRDirty, sum(test_fold$Outcome == 1 & logistic_prediction == 0))
 }
 
 cat(sprintf("Mean accuracy for Logistic Regression Model before cleaning : %.3f\n", mean(accuracyLRDirty)))
@@ -484,3 +494,33 @@ ggplot(df, aes(x=Fold)) +
 ```
 
 We can observe that there the Model's accuracy is more stable when using the cleaned data and therefore more robust. Using cleaned Data is of critical important to avoid overfitting and have a better generalisation of our model
+
+```{r echo=FALSE}
+df <- data.frame(
+  Fold = 1:n,
+  dirty_data = falseNegativeLRDirty,
+  cleaned_data = falseNegativeLR
+)
+
+ggplot(df, aes(x=Fold)) +
+  geom_line(aes(y=dirty_data, color="Dirty Data")) +
+  geom_line(aes(y=cleaned_data, color="Cleaned Data")) +
+  ylim(0,nrow(raw_diabetes) / 15) +
+  labs(title="Dirty Data vs Cleaned Data False Negative", y="False Negative") +
+  scale_color_manual("", values=c("Dirty Data"="blue", "Cleaned Data"="red"))
+```
+
+```{r echo=FALSE}
+df <- data.frame(
+  Fold = 1:n,
+  dirty_data = falsePositiveLRDirty,
+  cleaned_data = falsePositiveLR
+)
+
+ggplot(df, aes(x=Fold)) +
+  geom_line(aes(y=dirty_data, color="Dirty Data")) +
+  geom_line(aes(y=cleaned_data, color="Cleaned Data")) +
+  ylim(0,nrow(raw_diabetes) / 15) +
+  labs(title="Dirty Data vs Cleaned Data False Positive", y="False Positive") +
+  scale_color_manual("", values=c("Dirty Data"="blue", "Cleaned Data"="red"))
+```
