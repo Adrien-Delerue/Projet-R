@@ -337,10 +337,10 @@ logistic_prediction <- ifelse(predict(logistic_model, newdata = testFeatures, ty
 table(logistic_prediction, testData$Outcome)
 ```
 
-| Logistic Regression    | Real Diabetic |  Real Not Diabetic |
-|------------------------|---------------|--------------------|
-| Predicted Not Diabetic | 23            | 90                 |
-| Predicted Diabetic     | 29            | 12                 |
+| Logistic Regression    | Real Diabetic | Real Not Diabetic |
+|------------------------|---------------|-------------------|
+| Predicted Not Diabetic | 23            | 90                |
+| Predicted Diabetic     | 29            | 12                |
 
 The lines on the table are the reality and the columns are the predicted. Our model predicted 119 (90+29) right out of 154 (77% of accuracy) and it predicted 12 false positive and 23 false negative.
 
@@ -399,6 +399,8 @@ for(i in 1:n) {
   
   # Registering the accuracy for this fold
   accuracyLR <- c(accuracyLR, mean(logistic_prediction == test_fold$Outcome))
+  
+  # Registering the number of false positive and false negative to analyse the impact of data cleanin
   falsePositiveLR <- c(falsePositiveLR, sum(test_fold$Outcome == 0 & logistic_prediction == 1))
   
   falseNegativeLR <- c(falseNegativeLR, sum(test_fold$Outcome == 1 & logistic_prediction == 0))
@@ -493,7 +495,9 @@ ggplot(df, aes(x=Fold)) +
   scale_color_manual("", values=c("Dirty Data"="blue", "Cleaned Data"="red"))
 ```
 
-We can observe that there the Model's accuracy is more stable when using the cleaned data and therefore more robust. Using cleaned Data is of critical important to avoid overfitting and have a better generalisation of our model
+We can observe that there the Model's accuracy is more stable when using the cleaned data and therefore more robust.
+
+To have another way of comparing the use of cleaned and dirty data we are also going to compare the number of false Positive and false Negative of our model.
 
 ```{r echo=FALSE}
 df <- data.frame(
@@ -524,3 +528,9 @@ ggplot(df, aes(x=Fold)) +
   labs(title="Dirty Data vs Cleaned Data False Positive", y="False Positive") +
   scale_color_manual("", values=c("Dirty Data"="blue", "Cleaned Data"="red"))
 ```
+
+We can, for the false Positive and the false Negative, that there is less variation when using the cleaned data. Therefore, we can deduce that the model using cleaned data is more robust and stable than the one using the dirty data.
+
+This is the same conclusion we had previously.
+
+In the end the use of Cleaned data is better as it avoid over-fitting and provide a better generalization of our model.
