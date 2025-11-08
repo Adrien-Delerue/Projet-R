@@ -32,32 +32,59 @@ raw_diabetes = read.csv("diabetes.csv", head=TRUE, sep=",")
 summary(raw_diabetes)
 ```
 
+We have 8 variables and an outcome, Here is how to interpret them:
+
+**Pregnancies** : Number of times pregnant
+
+**Glucose** : Plasma glucose concentration a 2 hours in an oral glucose tolerance test
+
+**BloodPressure** : Diastolic blood pressure (mm Hg)
+
+**SkinThickness** : Triceps skin fold thickness (mm)
+
+**Insulin** : 2-Hour serum insulin (µ\*U/ml)
+
+**BMI** : Body mass index (weight in kg/(height in m)\^2)
+
+**DiabetesPedigreeFunction** : Diabetes pedigree function
+
+**Age** : Age (years)
+
+**Outcome**: variable indicating whether a person is diabetic (`1`) or not (`0`)
+
 # Step 1 : Data Cleaning and Preparation
 
-First we are going to replace all the impossible values, such as :
+Looking closely at the summary of our dataset, we can see misprint. The minimum values for glucose level, blood pressure, skin thickness, BMI, insulin, and diabetes pedigree function are 0. This makes no sense, so we need to clean up our dataset.
 
--   the Glucose level at 0
+Now that we have seen theses errors, we are going to replace all the impossible values with a NA value, such as :
 
--   the Blood Pressure at 0
+-   All Glucose level values at 0 in NA
 
--   the Skin Thickness at 0
+-   All the Blood Pressure at 0 in NA
 
--   the BMI at 0
+-   All the Skin Thickness at 0 in NA
 
--   and the Diabetes Pedigree Function at 0
+-   All the BMI at 0 in NA
+
+-   All the Insuline at 0 in NA
+
+-   And all the Diabetes Pedigree Function at 0 in NA
 
 We obtain the following summary :
 
 ```{r echo=FALSE}
 # Mutating each columns concern, if a value equals 0, it's replaced by an NA value
 selected_col <- c("Glucose", "BloodPressure", "SkinThickness", "BMI", "DiabetesPedigreeFunction", "Insulin")
-diabetes <- raw_diabetes %>% mutate(across(all_of(selected_col), ~ na_if(., 0))) # Replace all 0 values with NA in the selected columns
+diabetes <- raw_diabetes %>% mutate(across(all_of(selected_col), ~ na_if(., 0))) 
+# Replace all 0 values with NA in the selected columns
 # Across : apply the function for each col
 # ~ na_if(., 0) : replace 0 by NA for each col selected
 # . : current col
 # all_of : column names taken from a variable.
 summary(diabetes)
 ```
+
+Under the columns, you can see the number of NA values that have been placed, which correspond to the number of errors/missinformation that existed before the operation.
 
 Now we are going to replace those NA values by the median of each columns. We obtain the following summary :
 
