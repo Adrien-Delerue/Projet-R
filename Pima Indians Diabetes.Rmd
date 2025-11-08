@@ -1,5 +1,5 @@
 ---
-title: "PROJECT 4"
+title: "PROJECT 4 Groupain"
 output: 
   html_document:
     toc: true     
@@ -7,6 +7,8 @@ output:
     df_print: paged
     css: "Pima_Indians_Diabetes.css"
 date: "2025-10-22"
+author:
+- Cauche Paul - Coppin Léo- Delerue Adrien - Mathieu Paul
 ---
 
 # Pima Diabetes -Detecting Diabetes from Imperfect Medical Data
@@ -16,8 +18,7 @@ The project aims to predict diabetes in Pima Indian women using imperfect medica
 After cleaning invalid values, features are standardized and categorized, visualizations are created to explore patterns, and models (Logistic Regression and KNN) are trained and compared to show the impact of data cleaning.
 
 ```{r include=FALSE}
-#install.packages("dplyr")
-# install.packages("tidyr")
+# install.packages(c("ggplot2", "dplyr", "tidyr", "readr", "lubridate", "caret"))
 library(dplyr)
 library(gridExtra)
 library(ggplot2)
@@ -78,7 +79,7 @@ First, we create 2 new variables :
 
 Then we transform the Outcome variable into text to make it more understandable. If the value is 1, then we write "Diabetic", otherwise we write "Not Diabetic".
 
-```{r}
+```{r echo=FALSE}
 # Mutating each column needed to be categorized
 diabetes <- diabetes %>% mutate(
   BMICategory = case_when(
